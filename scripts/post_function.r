@@ -87,21 +87,24 @@ agrammon_options <- function(..., show = FALSE) {
     # assign defaults
     defaults <- list(
         # can be changed:
-        language = c('en', 'de', 'fr'),
-        print = c('', 
-            'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
-            'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
-            'LivestockNH3', 'PlantNH3',
-            'LivestockNtot', 'LivestockTAN',
-            'LivestockN2', 'LivestockNO', 'LivestockN2O'
+        free = list(
+            language = c('en', 'de', 'fr'),
+            print = c('', 
+                'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
+                'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
+                'LivestockNH3', 'PlantNH3',
+                'LivestockNtot', 'LivestockTAN',
+                'LivestockN2', 'LivestockNO', 'LivestockN2O'
+            )
+            variants = c('Base', 'Kantonal_LU')
+        ),
+        # fixed:
+        fixed = list(
+            model = c('version6', 'version4', 'version5'),
+            technical = c('technical.cfg', 'technical1990.cfg', 'technical1995.cfg', 
+                'technical2002.cfg', 'technical2007.cfg', 'technical2010.cfg')
         )
-        variants = c('Base', 'Kantonal_LU'),
-        # fix:
-        model = c('version6', 'version4', 'version5'),
-        technical = c('technical.cfg', 'technical1990.cfg', 'technical1995.cfg', 
-            'technical2002.cfg', 'technical2007.cfg', 'technical2010.cfg')
-        )
-
+    )
     # check show
     if (show) {
         # list options here
