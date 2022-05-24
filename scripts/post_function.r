@@ -82,7 +82,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
 #' @export
 #' @examples
 #' ## examples here
-#' run_model('tests/input-version6.json')
+#' agrammon_options(show = TRUE)
+#' agrammon_options(language = 'de', print = c('LivestockNH3', 'LivestockTAN'))
 agrammon_options <- function(..., show = FALSE) {
     # assign defaults
     defaults <- list(
@@ -137,8 +138,20 @@ agrammon_options <- function(..., show = FALSE) {
     # get dots
     dots <- list(...)
     # loop over free options
-    # for (fnms in names(default[['free']])) {
-    #     if (fnms %in% names(dots)) {
+    for (fnms in names(defaults[['free']])) {
+        if (fnms %in% names(dots)) {
+            if (fnms == 'print' & length(dots[[fnms]]) > 1) {
+                # check for empty string
+                if (any(dots[[fnms]] %in% c('', ' '))) {
+                    out[[fnms]] <- ''
+                } else {
+                    out[[fnms]] <- paste(dots[[fnms]], collapse = ',')
+                }
+            } else {
+                out[[fnms]] <- dots[[fnms]]
+            }
+        }
+    }
     # return invisible output
     if (show) {
         invisible(out)
