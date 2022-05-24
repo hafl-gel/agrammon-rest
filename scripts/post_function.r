@@ -128,11 +128,23 @@ agrammon_options <- function(..., show = FALSE) {
                 '"\n', sep = '')
         }
         cat('~~~~\n')
-        # print-only: ...
-        return(invisible())
     }
+    # prepare output
+    out <- c(
+        lapply(defaults[['free']], function(x) x[['values']][1]),
+        lapply(defaults[['fixed']], '[[', 1)
+        )
     # get dots
     dots <- list(...)
+    # loop over free options
+    # for (fnms in names(default[['free']])) {
+    #     if (fnms %in% names(dots)) {
+    # return invisible output
+    if (show) {
+        invisible(out)
+    } else {
+        out
+    }
 }
 
 # TODO:
