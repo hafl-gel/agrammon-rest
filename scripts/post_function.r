@@ -90,11 +90,11 @@ agrammon_options <- function(..., show = FALSE) {
         # can be changed:
         free = list(
             language = list(
-                help = 'language in output (default: en)', 
+                help = 'language in output', 
                 values = c('en', 'de', 'fr')
                 ),
             print = list(
-                help = 'output subset(s) to return (default: "" => complete model output)',
+                help = 'output subset(s) to return\n    ("" == detailed model output)',
                 values = c('', 
                 'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
                 'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
@@ -104,7 +104,7 @@ agrammon_options <- function(..., show = FALSE) {
                 )
             ),
             variants = list(
-                help = 'model variant (default: Base)',
+                help = 'model variant',
                 values = c('Base', 'Kantonal_LU')
             )
         ),
@@ -117,15 +117,15 @@ agrammon_options <- function(..., show = FALSE) {
     )
     # check show
     if (show) {
-        sp8 <- paste0(rep(' ', 8), collapse = '')
+        sp <- function(x) paste0(rep(' ', x), collapse = '')
         # list options here
-        cat('~~~~ agrammon options:\n')
+        cat('~~~~ agrammon options:\n(defaults are marked by *)\n')
         for (lnms in names(defaults[['free']])) {
             cat(lnms, ':\n    ', sep = '')
             cat(defaults[['free']][[lnms]][['help']], '\n    ')
-            cat('options:\n', sp8, '"', 
+            cat('options:\n', sp(7), '*"', 
                 paste0(defaults[['free']][[lnms]][['values']], 
-                    collapse = paste0('"\n', sp8, '"')), 
+                    collapse = paste0('"\n', sp(8), '"')), 
                 '"\n', sep = '')
         }
         cat('~~~~\n')
