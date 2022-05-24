@@ -2,12 +2,14 @@
 #'
 #' description
 #'
-#' @param token Agrammon REST-API access token
+#' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
 #' @export
 #' @examples
 #' ## examples here
-run_model <- function(token) {
+#' run_model('tests/input-version6.json')
+run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
+    id_labels = 'farm_count', agrammon_options = agrammon_options(), ..., token = NULL) {
 
     # check if curl is installed
     if (!requireNamespace('curl')) {
@@ -16,18 +18,98 @@ run_model <- function(token) {
     }
 
     # create handle
-    hdl <- new_handle()
+    hdl <- curl::new_handle()
 
     # set request option to post:
-    handle_setopt(hdl, customrequest = 'POST')
+    curl::handle_setopt(hdl, customrequest = 'POST')
+
+    browser()
+    # get dots
+    dots <- list(...)
+
+    # check agrammon options
+    #  - token
+    if (!is.null(agrammon_options[['token']]) {
+        if (!is.null(token)) {
+            warning('argument token has been provided - ignoring token list entry in agrammon_options!')
+            agrammon_options[['token']] <- NULL
+        } else {
+            token <- agrammon_options[['token']]
+        }
+    }
+    #  - model options (read from options?)
+    model_options <- list()
+    # check for 
+    # token
+    # .token
+    # variants
+    # model
+    # ...
+
+    # check input file and pass as form_data instead of form_file!
+
+    # check token
+    if (missing(token) && is.null(token <- getOption('agrammon.token'))) {
+        stop('agrammon token must be provided, either by argument "token" or by option "agrammon.token"')
+    }
 
     # add header part
-    handle_setheaders(hdl,
+    curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
         'Authorization' = paste0('Bearer ', token = token),
         'Accept' = 'text/csv'
         )
 
+    # add body
+    curl::handle_setform(hdl,
+        variants = model_options[['variant']],
+        model = model_options[['version']],
+        technical = model_options[['tech_file']],
+        simulation = labels[['simulation']],
+        dataset = labels[['id']],
+        language = model_options[['language']],
+        'print-only' = model_options[['print']],
+        inputs = form_file(input_file, "text/csv")
+    )
+}
+
+#' title
+#'
+#' description
+#'
+#' @param 
+#' @return  
+#' @export
+#' @examples
+#' ## examples here
+#' run_model('tests/input-version6.json')
+agrammon_options <- function(..., show = FALSE) {
+    # assign defaults
+    defaults <- list(
+        # can be changed:
+        language = c('en', 'de', 'fr'),
+        print = c('', 
+            'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
+            'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
+            'LivestockNH3', 'PlantNH3',
+            'LivestockNtot', 'LivestockTAN',
+            'LivestockN2', 'LivestockNO', 'LivestockN2O'
+        )
+        variants = c('Base', 'Kantonal_LU'),
+        # fix:
+        model = c('version6', 'version4', 'version5'),
+        technical = c('technical.cfg', 'technical1990.cfg', 'technical1995.cfg', 
+            'technical2002.cfg', 'technical2007.cfg', 'technical2010.cfg')
+        )
+
+    # check show
+    if (show) {
+        # list options here
+        # print-only: ...
+        return(invisible())
+    }
+    # get dots
+    dots <- list(...)
 }
 
 # TODO:
