@@ -8,8 +8,9 @@
 #' @examples
 #' ## examples here
 #' run_model('tests/input-version6.json')
+#' run_model('tests/input-version6.json', language = 'de')
 run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
-    id_labels = 'farm_count', agrammon_options = agrammon_options(), ..., token = NULL) {
+    id_labels = 'farm_count', model_options = agrammon_options(...), ..., token = NULL) {
 
     # check if curl is installed
     if (!requireNamespace('curl')) {
@@ -23,30 +24,21 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     # set request option to post:
     curl::handle_setopt(hdl, customrequest = 'POST')
 
-    browser()
-    # get dots
-    dots <- list(...)
-
     # check agrammon options
     #  - token
-    if (!is.null(agrammon_options[['token']]) {
+    if (!is.null(model_options[['token']])) {
         if (!is.null(token)) {
-            warning('argument token has been provided - ignoring token list entry in agrammon_options!')
-            agrammon_options[['token']] <- NULL
+            warning('argument token has been provided - ignoring token list entry in model_options!')
+            model_options[['token']] <- NULL
         } else {
-            token <- agrammon_options[['token']]
+            token <- model_options[['token']]
         }
     }
-    #  - model options (read from options?)
-    model_options <- list()
-    # check for 
-    # token
-    # .token
-    # variants
-    # model
-    # ...
 
+    # TODO:
     # check input file and pass as form_data instead of form_file!
+    # get/check id_labels from input
+    # add options related to filtering
 
     # check token
     if (missing(token) && is.null(token <- getOption('agrammon.token'))) {
@@ -71,6 +63,10 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         'print-only' = model_options[['print']],
         inputs = form_file(input_file, "text/csv")
     )
+
+    # call model
+
+    # clean up model results
 }
 
 #' title
