@@ -15,7 +15,7 @@ read_input_vars <- function(x, language = 'de', module = '') {
     nms <- names(x)
     # capture instances
     if ('instances' %in% nms) {
-        module <- paste0(module, '[instance_name]')
+        module <- paste0(module, '[INSTANCE_NAME]')
     }
     nms <- setdiff(nms, 'instances')
     if (module == '') {
@@ -42,7 +42,7 @@ read_input_vars <- function(x, language = 'de', module = '') {
                 tmp <- as.data.table(y[[i]])
             }
             # add instance
-            tmp[, instances := grepl('[instance_name]', module, fixed = TRUE)]
+            tmp[, instances := grepl('[INSTANCE_NAME]', module, fixed = TRUE)]
             # get animal category and slurry phase
             if (grepl('Livestock', module, fixed = TRUE)) {
                 tmp[, animal_cat := sub('Livestock::([a-zA-Z]*)[[].*', '\\1', module)]
@@ -62,6 +62,9 @@ read_input_vars <- function(x, language = 'de', module = '') {
     out
 }
 
+x <- read_input_vars(dj)
+x[!is.na(hasDefaultFormula), .(module, variable, hasDefaultFormula)]
+x[!is.na(default), .(module, variable, default)]
 
 x <- read_input_vars(dj)[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
 
