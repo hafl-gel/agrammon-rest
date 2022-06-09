@@ -92,7 +92,8 @@ create_template <- function(livestock = list(), storage = NULL) {
     # get input dump
     inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
     # get names of livestock
-    animal_cats <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory', c(unlist(enums), animal_cat)]
+    liv <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory'][order(animal_cat)]
+    animal_cats <- liv[, c(unlist(enums), animal_cat)]
     # if names don't match - print valid
     if (length(livestock) == 0 || is.null(names(livestock)) || any(!(names(livestock) %in% animal_cats))) {
         # print invalid livestock input
@@ -113,11 +114,11 @@ create_template <- function(livestock = list(), storage = NULL) {
             }
         }
         # print valid livestock input
-        # TODO: change below to Equides: -... -... -.. OtherCattle -... -... etc. | also, add help/label?
-        cat('\n*** Valid list entry names for argument "livestock"\nproviding the animal category:\n\t- ')
-        inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory', cat(paste(unlist(enums), collapse = "\n\t- "))]
-        cat('\nproviding the animal category\'s parent module:\n\t- ')
-        inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory', cat(paste(animal_cat, collapse = "\n\t- "))]
+        cat('\n*** Valid list entry names for argument "livestock"\nproviding the animal category or its parent class:')
+        liv[, {
+            cat('\n  ', .BY[[1]], '\n      ')
+            cat(paste(enums[[1]], collapse = '\n      '))
+        }, by = animal_cat]
         cat('\n***\n\n')
     }
 }
