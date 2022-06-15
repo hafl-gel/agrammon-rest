@@ -122,7 +122,32 @@ create_template <- function(livestock = list(), storage = NULL) {
             cat(paste(enums[[1]], collapse = '\n      '))
         }, by = animal_cat]
         cat('\n***\n\n')
+        # return from function
+        return invisible(NULL)
     }
+    ### start template here
+    inp_var[!is.na(validator), validator := {
+        x <- sub('[(]', ' ', validator)
+        x <- gsub('[);]', '', x)
+        x <- sub('[,]', ' and ', x)
+        sub('ge', 'greater or equal then', x)
+    }]
+    inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), enums_help_text)][!is.na(validator) & lengths(enums) == 0, remarks := validator]
+    inp_temp <- inp_var[, .(module, variable, value = '', unit, label, remarks, help = remarks_help)]
+    if (dump_all) {
+        return(inp_temp)
+    }
+    template <- NULL
+    ### livestock
+    # livestock <- list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd'))
+    for (nm in nms_liv) {
+        # check if nm is parent class
+        is_parent <- liv[, nm %chin% animal_cat]
+        # TODO: if not parent -> get parent and add animalcategory entry
+        # get template entries
+
+    }
+    # warning if no storage has been defined?
 }
 
 create_template()
