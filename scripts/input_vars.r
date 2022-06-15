@@ -1,16 +1,76 @@
 
+# TODO: 
+# 
+# - add function to get input dump, args: format, sort, language, token
+
 ## 0. header ----------------------------------------
 
+library(curl)
 library(jsonlite)
 library(data.table)
 
 path_file <- 'tests/inputs.json'
 
-## 1. read dump ----------------------------------------
+## 1. read model dump (input variables) ----------------------------------------
 
-dj <- read_json(path_file)
+#' get model dump
+#'
+#' helper function to get model dump via REST interface
+#'
+#' @param format ...
+#' @return  
+# curl  \
+#      -H "Content-Type: multipart/form-data" \
+#      -H "Accept: application/json" \
+#      -H 'Authorization: Bearer agm_N2SR5yjT4ydTnjAw/9yd+vnd/BxLD8/wr5TMcgEwATnHzr+4V7mLkxxwYYM=' \
+#    "https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=model&format=json&language=en"
+# format=csv und format=text geht auch. sort kann model oder calculation sein und language kann de, en, fr sein.
+get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
+    sort = c('model', 'calculation')[1], token = getOption('agrammon.token')) {
 
+    # check if curl is installed
+    if (!requireNamespace('curl')) {
+        stop('package "curl" is not available!\n\n', 
+            '    install.packages("curl")\n\n')
+    }
 
+    # create handle
+    hdl <- curl::new_handle()
+
+    # set request option to get:
+    curl::handle_setopt(hdl, customrequest = 'GET')
+
+    # add header part
+    curl::handle_setheaders(hdl,
+        'Content-Type' = 'multipart/form-data',
+        'Authorization' = paste0('Bearer ', token = token),
+        'Accept' = 'application/json'
+        )
+
+    # url
+    url <- sprintf("https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=%s&format=%s&language=%s",
+        sort[1], format[1], language[1])
+
+    # send request
+    req <- curl_fetch_memory(url, handle = hdl)
+
+    # convert to char
+    char <- rawToChar(req$content)
+
+    # parse answer and return
+    switch(format[1],
+        json = parse_json(char),
+        csv = read.table(text = char, sep = ';', stringsAsFactors = FALSE),
+        char
+        )
+}
+
+#' process model dump
+#'
+#' helper function to create template from model dump
+#'
+#' @param x model dump as json
+#' @return  
 read_input_vars <- function(x, language = 'de', module = '') {
     nms <- names(x)
     # capture instances
@@ -62,6 +122,8 @@ read_input_vars <- function(x, language = 'de', module = '') {
     out
 }
 
+dj <- get_input_template()
+
 x <- read_input_vars(dj)
 x[!is.na(hasDefaultFormula), .(module, variable, hasDefaultFormula)]
 x[!is.na(default), .(module, variable, default)]
@@ -84,7 +146,7 @@ x[animal_cat %in% 'DairyCow']
 #       - print.livestock = FALSE
 #       - oder print.livestock = TRUE, falls empty arguments
 
-create_template <- function(livestock = list(), storage = NULL) {
+create_template <- function(livestock = list(), storage = NULL, token = getOption('agrammon.token')) {
     dump_all <- FALSE
     # check livestock
     if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
@@ -92,7 +154,7 @@ create_template <- function(livestock = list(), storage = NULL) {
     }
     # get input dump
     # inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
-    inp_var <- read_input_vars(read_json('tests/inputs.json'))
+    inp_var <- read_input_vars(get_input_template(token = token))
     # check names of livestock
     liv <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory'][order(animal_cat)]
     animal_cats <- liv[, c(unlist(enums), animal_cat)]
@@ -123,7 +185,7 @@ create_template <- function(livestock = list(), storage = NULL) {
         }, by = animal_cat]
         cat('\n***\n\n')
         # return from function
-        return invisible(NULL)
+        return(invisible(NULL))
     }
     ### start template here
     inp_var[!is.na(validator), validator := {
@@ -133,22 +195,23 @@ create_template <- function(livestock = list(), storage = NULL) {
         sub('ge', 'greater or equal then', x)
     }]
     inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), enums_help_text)][!is.na(validator) & lengths(enums) == 0, remarks := validator]
-    inp_temp <- inp_var[, .(module, variable, value = '', unit, label, remarks, help = remarks_help)]
     if (dump_all) {
-        return(inp_temp)
+        # return all dummy instances
+        return(inp_var[, .(module, variable, value = '', unit, label, remarks, help = remarks_help)])
     }
     template <- NULL
     ### livestock
-    # livestock <- list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd'))
     for (nm in nms_liv) {
         # check if nm is parent class
         is_parent <- liv[, nm %chin% animal_cat]
         # TODO: if not parent -> get parent and add animalcategory entry
         # get template entries
-
+        browser()
     }
     # warning if no storage has been defined?
 }
+
+create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
 
 create_template()
 create_template('test1')
