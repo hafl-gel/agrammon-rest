@@ -85,31 +85,33 @@ x[animal_cat %in% 'DairyCow']
 #       - oder print.livestock = TRUE, falls empty arguments
 
 create_template <- function(livestock = list(), storage = NULL) {
+    dump_all <- FALSE
     # check livestock
-    if (!is.list(livestock)) {
+    if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
         stop('argument livestock must be a named list. Run create_template() to see valid options.')
     }
     # get input dump
-    inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
-    # get names of livestock
+    # inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
+    inp_var <- read_input_vars(read_json('tests/inputs.json'))
+    # check names of livestock
     liv <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory'][order(animal_cat)]
     animal_cats <- liv[, c(unlist(enums), animal_cat)]
+    nms_liv <- names(livestock)
     # if names don't match - print valid
-    if (length(livestock) == 0 || is.null(names(livestock)) || any(!(names(livestock) %in% animal_cats))) {
+    if (!dump_all && (length(livestock) == 0 || is.null(nms_liv) || any(!(nms_liv %in% animal_cats)))) {
         # print invalid livestock input
         if (length(livestock) > 0) {
-            nms <- names(livestock)
             # unnamed
-            if (is.null(nms) || '' %in% nms) {
+            if (is.null(nms_liv) || '' %in% nms_liv) {
                 warning('Unnamed list entries in argument "livestock" are invalid!', immediate. = TRUE)
-                nms <- setdiff(nms, '')
+                nms_liv <- setdiff(nms_liv, '')
             }
             # wrong names
-            if (length(nms) > 0 && any(wn <- !(nms %in% animal_cats))) {
+            if (length(nms_liv) > 0 && any(wn <- !(nms_liv %in% animal_cats))) {
                 if (sum(wn) > 1) {
-                    warning('list entry names "', paste(nms[wn], collapse = '", "'),'" in argument "livestock" are invalid!', immediate. = TRUE)
+                    warning('list entry names "', paste(nms_liv[wn], collapse = '", "'),'" in argument "livestock" are invalid!', immediate. = TRUE)
                 } else {
-                    warning('list entry name "', nms[wn],'" in argument "livestock" is invalid!', immediate. = TRUE)
+                    warning('list entry name "', nms_liv[wn],'" in argument "livestock" is invalid!', immediate. = TRUE)
                 }
             }
         }
