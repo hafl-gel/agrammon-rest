@@ -1,15 +1,9 @@
 
-# TODO: 
-# 
-# - add function to get input dump, args: format, sort, language, token
-
 ## 0. header ----------------------------------------
 
 library(curl)
 library(jsonlite)
 library(data.table)
-
-path_file <- 'tests/inputs.json'
 
 ## 1. read model dump (input variables) ----------------------------------------
 
@@ -67,7 +61,7 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
 
 #' process model dump
 #'
-#' helper function to create template from model dump
+#' helper function process model dump
 #'
 #' @param x model dump as json
 #' @return  
@@ -139,18 +133,50 @@ x[animal_cat %in% 'DairyCow']
 
 ## 2. create user template ----------------------------------------
 
-# NOTE:
-#   - function with arguments
-#       - livestock = list(dairy_cows = c('DC_1', 'DC_2'), heifers_1yr = c('H1_1', 'H1_2'), ...)
-#       - storage = list('tank1', 'tank2')
-#       - print.livestock = FALSE
-#       - oder print.livestock = TRUE, falls empty arguments
-
+#' create template in R
+#'
+#' helper function to create template from model dump
+#'
+#' @param x model dump as json
+#' @return  
 create_template <- function(livestock = list(), storage = NULL, token = getOption('agrammon.token')) {
     dump_all <- FALSE
     # check livestock
     if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
-        stop('argument livestock must be a named list. Run create_template() to see valid options.')
+        stop('argument livestock must be either a named list or TRUE (= writing all instances).\n',
+            '  Run create_template() for a list of valid list entry names.')
+    }
+    # check entries livestock
+    if (!is.logical(livestock) && length(livestock) > 0) {
+        # check for single values or vectors of type character 
+        if (!all(sapply(livestock, is.character))) {
+            stop('list entries (instance labels) in argument livestock must be single values or vectors of type character!')
+        }
+        # check != ''
+        if (any(unlist(lapply(livestock, '==', '')))) {
+            stop('list entries (instance labels) in argument livestock cannot contain empty (i.e."") characters!')
+        }
+        # check all unique
+        if (any(duplicated(unlist(livestock)))) {
+            stop('list entries (instance labels) in argument livestock cannot contain duplicated entries!')
+        }
+    }
+    # check entries storage
+    if (!is.null(storage)) {
+        # warn if is.logical livestock
+        if (is.logical(livestock)) warning('writing all instances, ignoring argument storage!')
+        # check for single value or vector of type character 
+        if (!is.character(storage)) {
+            stop('argument storage must be a single value or a vector of type character!')
+        }
+        # check != ''
+        if (any(storage == '')) {
+            stop('argument storage cannot contain empty (i.e. "") characters as instance names!')
+        }
+        # check all unique
+        if (any(duplicated(storage))) {
+            stop('argument storage cannot contain duplicated instance names!')
+        }
     }
     # get input dump
     # inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
@@ -289,9 +315,10 @@ create_template <- function(livestock = list(), storage = NULL, token = getOptio
 
 create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
 x <- create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')), storage = c('tank1', 'tank2'))
-# TODO: 1) check if character vectors! 2) check if all unique!
 
 create_template()
+create_template(TRUE)
+create_template(FALSE)
 create_template('test1')
 create_template(list('test2a'))
 create_template(list('test2a', dairy_cows = 'b'))
