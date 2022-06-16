@@ -222,7 +222,7 @@ create_template <- function(livestock = list(), storage = NULL, token = getOptio
         sub('ge', 'greater or equal then', x)
     }]
     # build remarks from enum entries and validators
-    inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), enums_help_text)][
+    inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), sapply(enums_help_text, paste, collapse = ','))][
         !is.na(validator) & lengths(enums) == 0, remarks := validator]
     # create template^2
     top_sorted <- c('Livestock', 'Storage', 'Application', 'PlantProduction')
