@@ -188,30 +188,108 @@ create_template <- function(livestock = list(), storage = NULL, token = getOptio
         return(invisible(NULL))
     }
     ### start template here
+    # human readable validator
     inp_var[!is.na(validator), validator := {
         x <- sub('[(]', ' ', validator)
         x <- gsub('[);]', '', x)
         x <- sub('[,]', ' and ', x)
         sub('ge', 'greater or equal then', x)
     }]
-    inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), enums_help_text)][!is.na(validator) & lengths(enums) == 0, remarks := validator]
+    # build remarks from enum entries and validators
+    inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), enums_help_text)][
+        !is.na(validator) & lengths(enums) == 0, remarks := validator]
+    # create template^2
+    top_sorted <- c('Livestock', 'Storage', 'Application', 'PlantProduction')
+    inp_template <- inp_var[order(match(top_module, top_sorted), module), 
+        .(module, variable, value = '', unit, label, remarks, help = remarks_help, instances, animal_cat)]
     if (dump_all) {
+        # create line with note
+        note <- inp_template[1, 1:7, with = FALSE][, lapply(.SD, function(x) "")]
+        note[, c('module', 'variable') := list(
+            'Note:', 
+            paste(
+                'Remove this line.',
+                'Copy/Remove modules with instances as required for your input and',
+                'replace all "INSTANCE_NAME" entries with corresponding instance names.'
+                )
+            )]
         # return all dummy instances
-        return(inp_var[, .(module, variable, value = '', unit, label, remarks, help = remarks_help)])
+        return(rbind(note, inp_template[, 1:7, with = FALSE]))
     }
+    ### livestock instances
+    # create cat key
+    cat_key <- liv[variable %chin% 'animalcategory', {
+        setNames(rep(animal_cat, lengths(enums)), unlist(enums))
+    }]
     template <- NULL
-    ### livestock
     for (nm in nms_liv) {
         # check if nm is parent class
-        is_parent <- liv[, nm %chin% animal_cat]
-        # TODO: if not parent -> get parent and add animalcategory entry
-        # get template entries
-        browser()
+        if (liv[, nm %chin% animal_cat]) {
+            # get template entries
+            tmp <- inp_template[animal_cat %chin% nm, 1:7, with = FALSE]
+        } else {
+            # get parent category
+            parent_cat <- cat_key[nm]
+            # get template entries
+            tmp <- inp_template[animal_cat %chin% parent_cat, 1:7, with = FALSE]
+            # set value of animalcategory
+            tmp[variable %chin% 'animalcategory', value := nm]
+        }
+        # loop over common livestock entries
+        last_instance <- '[INSTANCE_NAME]'
+        for (instance_name in livestock[[nm]]) {
+            # add brackets
+            repl <- paste0('[', instance_name, ']')
+            # set instance name
+            tmp[, module := sub(last_instance, repl, module, fixed = TRUE)]
+            # add to existing template
+            template <- rbind(template, tmp)
+            # update last instance name
+            last_instance <- repl
+        }
     }
+    ### storage instances
     # warning if no storage has been defined?
+    if (is.null(storage)) {
+        warning('No storage instances (slurry tanks) have been provided!',
+        '\nAdding line with Warning to output...')
+        # create line with warning
+        warn <- inp_template[1, 1:7, with = FALSE][, lapply(.SD, function(x) "")]
+        warn[, c('module', 'variable') := list(
+            'Warning!', 
+            paste(
+                'No storage instances (slurry tanks) have been provided!',
+                'Remove this line if your input does indeed not include slurry storage.',
+                'Otherwise, re-create this template with a storage instance (e.g. storage = "tank1")'
+                )
+            )]
+        # add to template
+        template <- rbind(warn, template)
+    } else {
+        # get template entries
+        tmp <- inp_template[is.na(animal_cat) & instances, 1:7, with = FALSE]
+        # loop over storage instances
+        last_instance <- '[INSTANCE_NAME]'
+        for (instance_name in storage) {
+            # add brackets
+            repl <- paste0('[', instance_name, ']')
+            # set instance name
+            tmp[, module := sub(last_instance, repl, module, fixed = TRUE)]
+            # add to existing template
+            template <- rbind(template, tmp)
+            # update last instance name
+            last_instance <- repl
+        }
+    }
+    ### residual input without instance
+    template <- rbind(template, inp_template[!(instances), 1:7, with = FALSE])
+    # return unsorted template
+    template
 }
 
 create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
+x <- create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')), storage = c('tank1', 'tank2'))
+# TODO: 1) check if character vectors! 2) check if all unique!
 
 create_template()
 create_template('test1')
