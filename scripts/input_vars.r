@@ -325,3 +325,38 @@ create_template(list('test2a', dairy_cows = 'b'))
 create_template(list(dc = 'test2b', dairy_cows = 'b'))
 create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
 
+#' save template to file
+#'
+#' save a csv file which can be used as template for model input
+#'
+#' @details
+#' If argument \code{livestock} is \code{TRUE} ...
+#' If \code{livestock} is a named list ...
+#' If \code{livestock} is an empty list (default) ...
+#' A valid \code{token} can be required from support@agrammon.ch
+#'
+#' @param file file path
+#' @param livestock a named list or \code{TRUE}. The default is an empty list. See Details.
+#' @param storage a character vector providing storage instance names (slurry tanks)
+#' @param token token which will be used to perform the REST call.
+#' @export
+#' @return NULL
+#' @examples
+#' \dontrun{
+#'   # "register" token -> wie?
+#'   register_token(my_token)
+#'   # save template to file
+#'   save_template('model_template.csv', 
+#'      livestock = list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), storage = 'Tank_1')
+#' }
+save_template <- function(file, livestock = list(), storage = NULL, token = getOption('agrammon.token')) {
+    # get template
+    out <- create_template(livestock, storage, token)
+    # proceed only if out != null
+    if (!is.null(out)) {
+        # write to file
+        fwrite(out, file, sep = ';')
+    }
+    # return null
+    invisible()
+}
