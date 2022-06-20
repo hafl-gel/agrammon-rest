@@ -20,7 +20,7 @@ library(data.table)
 #    "https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=model&format=json&language=en"
 # format=csv und format=text geht auch. sort kann model oder calculation sein und language kann de, en, fr sein.
 get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
-    sort = c('model', 'calculation')[1], token = getOption('agrammon.token')) {
+    sort = c('model', 'calculation')[1], token = Sys.getenv('AGRAMMON_TOKEN')) {
 
     # check if curl is installed
     if (!requireNamespace('curl')) {
@@ -33,6 +33,11 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
 
     # set request option to get:
     curl::handle_setopt(hdl, customrequest = 'GET')
+
+    # check token
+    if (!is.character(token) || token == '') {
+        stop('not agrammon token available')
+    }
 
     # add header part
     curl::handle_setheaders(hdl,
@@ -139,7 +144,7 @@ x[animal_cat %in% 'DairyCow']
 #'
 #' @param x model dump as json
 #' @return  
-create_template <- function(livestock = list(), storage = NULL, token = getOption('agrammon.token')) {
+create_template <- function(livestock = list(), storage = NULL, token = Sys.getenv('AGRAMMON_TOKEN')) {
     dump_all <- FALSE
     # check livestock
     if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
@@ -178,8 +183,11 @@ create_template <- function(livestock = list(), storage = NULL, token = getOptio
             stop('argument storage cannot contain duplicated instance names!')
         }
     }
+    # check token
+    if (!is.character(token) || token == '') {
+        stop('not agrammon token available')
+    }
     # get input dump
-    # inp_var <- read_input_vars(read_json('tests/inputs.json'))[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
     inp_var <- read_input_vars(get_input_template(token = token))
     # check names of livestock
     liv <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory'][order(animal_cat)]
@@ -349,7 +357,11 @@ create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
 #'   save_template('model_template.csv', 
 #'      livestock = list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), storage = 'Tank_1')
 #' }
-save_template <- function(file, livestock = list(), storage = NULL, token = getOption('agrammon.token')) {
+save_template <- function(file, livestock = list(), storage = NULL, token = Sys.getenv('AGRAMMON_TOKEN')) {
+    # check token
+    if (!is.character(token) || token == '') {
+        stop('not agrammon token available')
+    }
     # get template
     out <- create_template(livestock, storage, token)
     # proceed only if out != null

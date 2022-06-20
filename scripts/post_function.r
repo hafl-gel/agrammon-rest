@@ -41,8 +41,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     # add options related to filtering
 
     # check token
-    if (missing(token) && is.null(token <- getOption('agrammon.token'))) {
-        stop('agrammon token must be provided, either by argument "token" or by option "agrammon.token"')
+    if (missing(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
+        stop('no agrammon token provided')
     }
 
     # add header part
