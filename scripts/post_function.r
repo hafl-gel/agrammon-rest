@@ -7,15 +7,20 @@
 #' @export
 #' @examples
 #' ## examples here
-#' run_model('tests/input-version6.json')
-#' run_model('tests/input-version6.json', language = 'de')
+#' run_model('./tests/inputs-version6-rest.csv')
+#' run_model('./tests/inputs-version6-rest.csv', language = 'de')
 run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
-    id_labels = 'farm_count', model_options = agrammon_options(...), ..., token = NULL) {
+    farm_id = NULL, model_options = agrammon_options(...), ..., token = NULL) {
 
     # check if curl is installed
     if (!requireNamespace('curl')) {
         stop('package "curl" is not available!\n\n', 
             '    install.packages("curl")\n\n')
+    }
+    # check if data.table is installed
+    if (!requireNamespace('data.table')) {
+        stop('package "data.table" is not available!\n\n', 
+            '    install.packages("data.table")\n\n')
     }
 
     # create handle
@@ -30,6 +35,12 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     } else if (!is.character(token) || token == '') {
         stop('input to argument "token" cannot be valid')
     }
+
+    # read input file
+    raw_input <- fread(file = input_file, showProgress = FALSE)
+
+    # validate input
+    input_data <- check_and_validate(raw_input, simulation, farm_id)
 
     # add header part
     curl::handle_setheaders(hdl,
@@ -47,13 +58,47 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         dataset = labels[['id']],
         language = model_options[['language']],
         'print-only' = model_options[['print']],
-        inputs = form_file(input_file, "text/csv")
+        inputs = form_data(input_data, "text/csv")
     )
 
     # call model
 
     # clean up model results
 }
+
+check_and_validate <- function(dt, simulation, farm_id) {
+    # read input vars
+    # check if ncol > 3
+    browser()
+    # if ncol > 3 -> do we find simulation and/or farm id in them?
+    # or: search for input -> what is left?
+    # find module
+    valid_module <- dt[, {
+        check_semicolon <- lapply(.SD, grepl, pattern = "::", fixed = TRUE)
+        semicol <- which.max(sapply(check_semicolon, sum, USE.NAMES = FALSE))
+        I(list(semicol, check_semicolon[[semicol]]))
+    }]
+    # remove invalid columns
+    dt <- dt[which(valid_module[[2]]), ]
+    # find variables, values and others
+    var_val <- dt[, {
+        # variables
+        # find 'dilution_parts_water'? -> find a mandatory input variable
+        # values
+        # find which.max(!is.na(as.numeric))
+    }, .SDcols = names(dt)[-valid_module[[1]]]]
+}
+
+# TODO:
+#   - validate input file
+#   - extract simulation & ... from input file, if given
+#   - add option to use filters (animal cat)
+# add check_input()
+# check as csv:
+# check mandatory input vars -> ok?
+# check residual input -> does it match any optional vars?
+# remove invalid input with message?
+# add read_input (read multiple data sets from one csv)
 
 #' title
 #'
@@ -141,9 +186,3 @@ agrammon_options <- function(..., show = FALSE) {
         out
     }
 }
-
-# TODO:
-#   - add function to write csv template with option to provide animal categories & storage tanks?
-#   - validate input file
-#   - extract simulation & ... from input file, if given
-#   - add option to use filters (animal cat)
