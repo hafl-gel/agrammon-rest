@@ -11,51 +11,37 @@ library(data.table)
 #'
 #' helper function to get model dump via REST interface
 #'
-#' @param format ...
 #' @return  
-# curl  \
-#      -H "Content-Type: multipart/form-data" \
-#      -H "Accept: application/json" \
-#      -H 'Authorization: Bearer agm_N2SR5yjT4ydTnjAw/9yd+vnd/BxLD8/wr5TMcgEwATnHzr+4V7mLkxxwYYM=' \
-#    "https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=model&format=json&language=en"
-# format=csv und format=text geht auch. sort kann model oder calculation sein und language kann de, en, fr sein.
+#' @examples
+#' mj <- get_input_template()
 get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
     sort = c('model', 'calculation')[1], token = Sys.getenv('AGRAMMON_TOKEN')) {
-
     # check if curl is installed
     if (!requireNamespace('curl')) {
         stop('package "curl" is not available!\n\n', 
             '    install.packages("curl")\n\n')
     }
-
     # create handle
     hdl <- curl::new_handle()
-
     # set request option to get:
     curl::handle_setopt(hdl, customrequest = 'GET')
-
     # check token
     if (!is.character(token) || token == '') {
         stop('not agrammon token available')
     }
-
     # add header part
     curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
         'Authorization' = paste0('Bearer ', token = token),
         'Accept' = 'application/json'
         )
-
     # url
     url <- sprintf("https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=%s&format=%s&language=%s",
         sort[1], format[1], language[1])
-
     # send request
     req <- curl_fetch_memory(url, handle = hdl)
-
     # convert to char
     char <- rawToChar(req$content)
-
     # parse answer and return
     switch(format[1],
         json = parse_json(char),
@@ -70,6 +56,9 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
 #'
 #' @param x model dump as json
 #' @return  
+#' @examples
+#' mj <- get_input_template()
+#' x <- read_input_vars(mj)
 read_input_vars <- function(x, language = 'de', module = '') {
     nms <- names(x)
     # capture instances
@@ -121,20 +110,6 @@ read_input_vars <- function(x, language = 'de', module = '') {
     out
 }
 
-dj <- get_input_template()
-
-x <- read_input_vars(dj)
-x[!is.na(hasDefaultFormula), .(module, variable, hasDefaultFormula)]
-x[!is.na(default), .(module, variable, default)]
-
-x <- read_input_vars(dj)[, .(module, variable, enums, label, unit, instances, animal_cat, top_module)]
-
-x[!is.na(animal_cat)]
-x[lengths(enums) > 0, ]
-
-x[top_module %in% 'Storage']
-x[animal_cat %in% 'DairyCow']
-
 
 ## 2. create user template ----------------------------------------
 
@@ -144,6 +119,18 @@ x[animal_cat %in% 'DairyCow']
 #'
 #' @param x model dump as json
 #' @return  
+#' @examples
+#'create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
+#'x <- create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')), storage = c('tank1', 'tank2'))
+#'
+#'create_template()
+#'create_template(TRUE)
+#'create_template(FALSE)
+#'create_template('test1')
+#'create_template(list('test2a'))
+#'create_template(list('test2a', dairy_cows = 'b'))
+#'create_template(list(dc = 'test2b', dairy_cows = 'b'))
+#'create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
 create_template <- function(livestock = list(), storage = NULL, token = Sys.getenv('AGRAMMON_TOKEN')) {
     dump_all <- FALSE
     # check livestock
@@ -321,17 +308,6 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
     template
 }
 
-create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
-x <- create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')), storage = c('tank1', 'tank2'))
-
-create_template()
-create_template(TRUE)
-create_template(FALSE)
-create_template('test1')
-create_template(list('test2a'))
-create_template(list('test2a', dairy_cows = 'b'))
-create_template(list(dc = 'test2b', dairy_cows = 'b'))
-create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
 
 #' save template to file
 #'
