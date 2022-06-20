@@ -24,25 +24,11 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     # set request option to post:
     curl::handle_setopt(hdl, customrequest = 'POST')
 
-    # check agrammon options
-    #  - token
-    if (!is.null(model_options[['token']])) {
-        if (!is.null(token)) {
-            warning('argument token has been provided - ignoring token list entry in model_options!')
-            model_options[['token']] <- NULL
-        } else {
-            token <- model_options[['token']]
-        }
-    }
-
-    # TODO:
-    # check input file and pass as form_data instead of form_file!
-    # get/check id_labels from input
-    # add options related to filtering
-
     # check token
-    if (missing(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
-        stop('no agrammon token provided')
+    if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
+        stop('no agrammon token available')
+    } else if (!is.character(token) || token == '') {
+        stop('input to argument "token" cannot be valid')
     }
 
     # add header part
