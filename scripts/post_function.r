@@ -43,8 +43,7 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     valid_data <- check_and_validate(raw_input)
 
     # prepare input 
-    #   - remove & keep unique col entries
-    #   - split valid data by farm id
+    loop_data <- valid_data$data[, .(farm_id_, module, variable, value)]
 
     # add header part
     curl::handle_setheaders(hdl,
@@ -53,22 +52,60 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         'Accept' = 'text/csv'
         )
 
-    # add body
-    curl::handle_setform(hdl,
-        variants = model_options[['variant']],
-        model = model_options[['version']],
-        technical = model_options[['tech_file']],
-        simulation = labels[['simulation']],
-        dataset = labels[['id']],
-        language = model_options[['language']],
-        'print-only' = model_options[['print']],
-        inputs = form_data(input_data, "text/csv")
-    )
+    # loop over data
+    res <- loop_data[, {
+        # write to character input
+        input_data <- paste(module, variable, value, sep = ';', collapse = '\n')
+        # add body
+        curl::handle_setform(hdl,
+            variants = model_options[['variants']],
+            model = model_options[['model']],
+            technical = model_options[['technical']],
+            simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
+            dataset = as.character(.BY$farm_id_),
+            language = model_options[['language']],
+            'print-only' = model_options[['print']],
+            inputs = form_data(input_data, "text/csv")
+        )
+        # call model
+        req <- curl_fetch_memory("https://model.agrammon.ch/singleRest/api/v1/run", handle = hdl)
+        # convert to data.table
+        fread(text = rawToChar(req$content))[, -(1:2)]
+    }, by = farm_id_]
 
-    # call model
-
-    # clean up model results
+    # set colnames
+    setnames(res, paste0('V', 3:7), c('module', 'variable', 'filter', 'value', 'unit'))
+    # get names
+    nms <- copy(names(res))
+    # add farm id
+    if (is.null(valid_data$farm_id)) {
+        res[, farm_id := 1L]
+    } else {
+        # get key
+        farm_key <- unique(valid_data$data[, .(farm_id_, x = get(valid_data$farm_id))])[, setNames(x, farm_id_)]
+        # replace entries
+        res[, farm_id := farm_key[farm_id_]]
+    }
+    # move farm_id to front
+    setcolorder(res, c('farm_id', nms))
+    # remove farm_id_
+    res[, farm_id_ := NULL]
+    # add unique cols
+    if (!is.null(valid_data$unique_cols)) {
+        res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
+    }
+    # return
+    res[]
 }
+
+# TODO: check all cases!!!
+# file <- './tests/inputs-version6-rest.csv'
+# file <- './tests/input_data/test_1farm_no_id.csv'
+# file <- './tests/input_data/test_1farm_incl_id.csv'
+# file <- './tests/input_data/test_3farms_no_id.csv'
+file <- './tests/input_data/test_3farms_incl_id.csv'
+
+run_model(file)
 
 check_and_validate <- function(dt) {
     # read input vars
@@ -206,13 +243,9 @@ check_and_validate <- function(dt) {
             if (any(nf <- nc == nms_tab)) {
                 fic_ <- nms_extra_cols[nf]
                 if (sum(nf) > 1) {
-                    # check if columns are correlating
-                    check_me <- dt[, paste(.SD, sep = ';'), .SDcols = fic_]
-                    if (length(unique(check_me)) != nms_tab) {
-                        # farm id col not detectable
-                        stop('farm id column cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
-                        # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                    }
+                    # farm id col not detectable
+                    # could be solved by checking each set according to fic_ entries, but this is too much hassle...
+                    stop('farm id column cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
                 }
             }
             # get unique cols
@@ -243,7 +276,7 @@ check_and_validate <- function(dt) {
     if (is.null(list_ids$farm_id)) {
         dt[, farm_id_ := 1L]
     } else {
-        dt[, farm_id_ := get(list_ids$farm_id)]
+        dt[, farm_id_ := frank(factor(get(list_ids$farm_id)), ties.method = 'dense')]
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
@@ -288,16 +321,6 @@ check_and_validate <- function(dt) {
     c(list(data = dt), list_ids)
 }
 
-# TODO: check all cases!!!
-# file <- './tests/input_data/test_1farm_no_id.csv'
-# file <- './tests/input_data/test_1farm_incl_id.csv'
-# file <- './tests/input_data/test_3farms_no_id.csv'
-file <- './tests/input_data/test_3farms_incl_id.csv'
-
-dtable <- fread(file)
-check_and_validate(dtable)
-
-run_model('./tests/inputs-version6-rest.csv')
 
 # Fun: fast %in%/%ex% (is in-/excluded?) via C++ set..?
 # lualine -> clone + change buffer function + change highlighting of alternate file (#)
