@@ -216,16 +216,18 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         x <- sub('[,]', ' and ', x)
         sub('ge', 'greater or equal then', x)
     }]
+    # set default NA to empty char ''
+    inp_var[is.na(default), default := '']
     # build remarks from enum entries and validators
     inp_var[, c('remarks', 'remarks_help') := .(sapply(enums, paste, collapse = ','), sapply(enums_help_text, paste, collapse = ','))][
         !is.na(validator) & lengths(enums) == 0, remarks := validator]
     # create template^2
     top_sorted <- c('Livestock', 'Storage', 'Application', 'PlantProduction')
     inp_template <- inp_var[order(match(top_module, top_sorted), module), 
-        .(module, variable, value = '', unit, label, remarks, help = remarks_help, instances, animal_cat)]
+        .(module, variable, value = '', unit, label, remarks, default, help = remarks_help, instances, animal_cat)]
     if (dump_all) {
         # create line with note
-        note <- inp_template[1, 1:7, with = FALSE][, lapply(.SD, function(x) "")]
+        note <- inp_template[1, module:help, with = FALSE][, lapply(.SD, function(x) "")]
         note[, c('module', 'variable') := list(
             'Note:', 
             paste(
@@ -235,7 +237,7 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
                 )
             )]
         # return all dummy instances
-        return(rbind(note, inp_template[, 1:7, with = FALSE]))
+        return(rbind(note, inp_template[, module:help, with = FALSE]))
     }
     ### livestock instances
     # create cat key
@@ -247,12 +249,12 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         # check if nm is parent class
         if (liv[, nm %chin% animal_cat]) {
             # get template entries
-            tmp <- inp_template[animal_cat %chin% nm, 1:7, with = FALSE]
+            tmp <- inp_template[animal_cat %chin% nm, module:help, with = FALSE]
         } else {
             # get parent category
             parent_cat <- cat_key[nm]
             # get template entries
-            tmp <- inp_template[animal_cat %chin% parent_cat, 1:7, with = FALSE]
+            tmp <- inp_template[animal_cat %chin% parent_cat, module:help, with = FALSE]
             # set value of animalcategory
             tmp[variable %chin% 'animalcategory', value := nm]
         }
@@ -275,7 +277,7 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         warning('No storage instances (slurry tanks) have been provided!',
         '\nAdding line with Warning to output...')
         # create line with warning
-        warn <- inp_template[1, 1:7, with = FALSE][, lapply(.SD, function(x) "")]
+        warn <- inp_template[1, module:help, with = FALSE][, lapply(.SD, function(x) "")]
         warn[, c('module', 'variable') := list(
             'Warning!', 
             paste(
@@ -288,7 +290,7 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         template <- rbind(warn, template)
     } else {
         # get template entries
-        tmp <- inp_template[is.na(animal_cat) & instances, 1:7, with = FALSE]
+        tmp <- inp_template[is.na(animal_cat) & instances, module:help, with = FALSE]
         # loop over storage instances
         last_instance <- '[INSTANCE_NAME]'
         for (instance_name in storage) {
@@ -303,7 +305,7 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         }
     }
     ### residual input without instance
-    template <- rbind(template, inp_template[!(instances), 1:7, with = FALSE])
+    template <- rbind(template, inp_template[!(instances), module:help, with = FALSE])
     # return unsorted template
     template
 }
