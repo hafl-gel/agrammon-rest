@@ -240,10 +240,10 @@ check_and_validate <- function(dt) {
         I(list(farm_id = fic_, unique_cols = unique_cols))
     }]
     # get/add fic_ (to loop by)
-    if (is.null(list_ids$fic_)) {
+    if (is.null(list_ids$farm_id)) {
         dt[, farm_id_ := 1L]
     } else {
-        dt[, farm_id_ := get(list_ids$fic_)]
+        dt[, farm_id_ := get(list_ids$farm_id)]
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
