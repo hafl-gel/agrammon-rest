@@ -140,7 +140,7 @@ check_and_validate <- function(dt) {
     fic_ <- NULL
     unique_cols <- NULL
     # check number of entries
-    check_no[, {
+    list_ids <- check_no[, {
         # get tab
         tab <- table(num)
         # get unique entries in num
@@ -218,12 +218,14 @@ check_and_validate <- function(dt) {
                 }, .SDcols = setdiff(names(dt), added_names)]
             }
         }
+        # return
+        I(list(farm_id = fic_, unique_cols = unique_cols))
     }]
     # get/add fic_ (to loop by)
-    if (is.null(fic_)) {
+    if (is.null(list_ids$fic_)) {
         dt[, farm_id_ := 1L]
     } else {
-        dt[, farm_id_ := get(fic_)]
+        dt[, farm_id_ := get(list_ids$fic_)]
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
@@ -265,7 +267,7 @@ check_and_validate <- function(dt) {
         }
     }]
     # return
-    list(data = dt, farm_id = fic_, unique_cols = unique_cols)
+    c(list(data = dt), list_ids)
 }
 
 # TODO: check all cases!!!
