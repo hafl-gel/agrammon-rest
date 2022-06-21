@@ -40,7 +40,11 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     raw_input <- fread(file = input_file, showProgress = FALSE)
 
     # validate input
-    input_data <- check_and_validate(raw_input, simulation, farm_id)
+    valid_data <- check_and_validate(raw_input)
+
+    # prepare input 
+    #   - remove & keep unique col entries
+    #   - split valid data by farm id
 
     # add header part
     curl::handle_setheaders(hdl,
@@ -66,7 +70,7 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     # clean up model results
 }
 
-check_and_validate <- function(dt, simulation, farm_id) {
+check_and_validate <- function(dt) {
     # read input vars
     temp <- create_template(TRUE)
     # remove Note: and NA rows???
@@ -124,31 +128,137 @@ check_and_validate <- function(dt, simulation, farm_id) {
     }]
     # rename temp names
     setnames(temp, names(temp), paste0(names(temp), '_'))
-    browser()
     #########
     # check mandatory - without instance
-    dt[module_var %chin% temp[!(has_instance_)][default_ %chin% '', module_var_], {
-        # do below here
+    temp_no <- temp[!(has_instance_)][default_ %chin% '', ]
+    check_no <- merge(temp_no, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE)[, {
+        c(list(num = sum(!is.na(value))), .SD)
+    }, by = module_var_]
+    # prepare output farm id & unique cols
+    fic_ <- NULL
+    unique_cols <- NULL
+    # check number of entries
+    check_no[, {
+        # get tab
+        tab <- table(num)
+        # get unique entries in num
+        nms_tab <- as.integer(names(tab))
+        # throw error if an entry is missing
+        if (0 %in% nms_tab) {
+            ind <- 0 %in% num
+            stop('Following mandatory input is missing:\n',
+                paste0('', module[ind], ' -> ', variable[ind], '\n')
+            )
+        }
+        if (length(nms_tab) > 1) {
+            # get max
+            n_max <- nms_tab[which.max(tab)]
+            # check smaller
+            if (any(nms_tab < n_max)) {
+                # missing entries
+                ind <- which(num < n_max)
+                stop(
+                    'Missing entries!\n',
+                    'The majority of mandatory input variables appear ', n_max, ' times.\n',
+                    if (length(ind) > 1) {
+                        paste0('The following mandatory input variable appears less than ', n_max,' times:\n')
+                    } else {
+                        paste0('The following mandatory input variables appear less than ', n_max,' times:\n')
+                    },
+                    paste0(module[ind], ' -> ', variable[ind], '\n')
+                )
+            }
+            # check larger
+            if (any(nms_tab > n_max)) {
+                # duplicates
+                ind <- which(num > n_max)
+                stop(
+                    'Too many entries!\n',
+                    'The majority of mandatory input variables appear ', n_max, ' times.\n',
+                    if (length(ind) > 1) {
+                        paste0('The following mandatory input variable appears more than ', n_max,' times:\n')
+                    } else {
+                        paste0('The following mandatory input variables appear more than ', n_max,' times:\n')
+                    },
+                    paste0(module[ind], ' -> ', variable[ind], '\n')
+                )
+            }
+        } else if(nms_tab != 1) {
+            # check farm id in additional columns
+            if (length(nms_dt) == 0) {
+                # missing farm id
+                stop('A column containing the farm id is required\n',
+                    '    if more than one farm is specified in the input!')
+            }
+            # TODO:
+            # get fic_ (farm id col) name (error if not found)
+            browser()
+            # check unique col entries != ''
+            if (!is.null(unique_cols)) {
+                    # TODO: check here
+            }
+        } else {
+            # check additional columns
+            if (length(nms_dt) > 0) {
+                # do we find farm id col?
+                # if farm id != integer -> convert and keep key (as attr to convert back)
+                # do we find simulation id?
+                # TODO:
+                browser()
+                # check unique col entries != ''
+                if (!is.null(unique_cols)) {
+                    # TODO: check here
+                }
+            }
+        }
     }]
-    #   select all variable within mandatories
-    #   loop by module_var & variable with instance == ''
-    #   get number of entries -> number of
-    # check residual if exist
-    # validate -> loop (by) over temp col remarks
-    #       \-> set names of temp to temp_ -> name collision
-    # invalid entries:
-    dt[!(module_var %chin% temp[, module_var_])]
-    #########
-    # find/check for input columns + simulation/farm id
-    #   \-> loop over nms_dt
-    # simulation id: unique over all valid entries
-    # farm id: unique over within-farm valid entries
-    # if ncol > 3 -> do we find simulation and/or farm id in them?
-    # or: search for input -> what is left?
-    browser()
-    if (length(nms_dt) > 0) {
-        browser()
+    # get/add fic_ (to loop by)
+    if (is.null(fic_)) {
+        dt[, farm_id_ := 1L]
+    } else {
+        dt[, farm_id_ := get(fic_)]
     }
+    # check mandatory - with instance
+    temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
+    # select check with instance
+    check_ins <- merge(temp_ins, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE)[, {
+        c(list(num = sum(!is.na(value))), .SD)
+    }, by = module_var_]
+    # add module parent to check
+    check_ins[, parent := tstrsplit(module_, '[[]|[]]', keep = 1)]
+    # loop by farm id, parent
+    check_ins[, {
+        # all is.na -> not existing
+        if (!all(is_na <- is.na(instance))) {
+            if (any(is_na)) {
+                # missing entry
+                stop('Missing entry!',
+                    if (sum(is_na) == 1) {
+                        paste0('Input ', variable_[is_na], ' is missing\n')
+                    } else {
+                        paste0('Input variables ', paste(variable_[is_na], sep = ','), ' are missing\n')
+                    },
+                    'for Instance ', instance[!is_na][1]
+                )
+            }
+        }
+    }, by = .(farm_id_, parent)]
+    # any invalid entries:
+    dt[!(module_var %chin% temp[, module_var_]), {
+        if (.N > 0) {
+            stop(
+                'Entries not valid!\n',
+                if (.N == 1) {
+                    'The following input entry is not valid:\n'
+                } else {
+                    'The following input entries are not valid:\n'
+                },
+                paste0(module, ' -> ', variable, '\n')
+            )
+        }
+    }]
+    # return
+    list(data = dt, farm_id = fic_, unique_cols = unique_cols)
 }
 
 run_model('./tests/inputs-version6-rest.csv')
