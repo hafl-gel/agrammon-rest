@@ -13,12 +13,12 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     farm_id = NULL, model_options = agrammon_options(...), ..., token = NULL) {
 
     # check if curl is installed
-    if (!requireNamespace('curl')) {
+    if (!require('curl')) {
         stop('package "curl" is not available!\n\n', 
             '    install.packages("curl")\n\n')
     }
     # check if data.table is installed
-    if (!requireNamespace('data.table')) {
+    if (!require('data.table')) {
         stop('package "data.table" is not available!\n\n', 
             '    install.packages("data.table")\n\n')
     }
@@ -68,26 +68,65 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
 
 check_and_validate <- function(dt, simulation, farm_id) {
     # read input vars
-    # check if ncol > 3
-    browser()
-    # if ncol > 3 -> do we find simulation and/or farm id in them?
-    # or: search for input -> what is left?
+    temp <- create_template(TRUE)
+    # has instance?
+    temp[, has_instance := grepl('[', module, fixed = TRUE)]
+    # add instance parent
+    temp[, module_wo := module]
+    temp[(has_instance), module_wo := {
+        unlist(lapply(strsplit(module, '[[]|[]]'), function(x) paste0(x[-2], collapse = '')))
+    }]
     # find module
     valid_module <- dt[, {
         check_semicolon <- lapply(.SD, grepl, pattern = "::", fixed = TRUE)
-        semicol <- which.max(sapply(check_semicolon, sum, USE.NAMES = FALSE))
+        semicol <- names(.SD)[which.max(lapply(check_semicolon, sum))]
         I(list(semicol, check_semicolon[[semicol]]))
     }]
     # remove invalid columns
     dt <- dt[which(valid_module[[2]]), ]
-    # find variables, values and others
-    var_val <- dt[, {
-        # variables
-        # find 'dilution_parts_water'? -> find a mandatory input variable
-        # values
-        # find which.max(!is.na(as.numeric))
-    }, .SDcols = names(dt)[-valid_module[[1]]]]
+    # find variable
+    nm_var <- dt[, {
+        names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% temp[, variable])))]
+    }, .SDcols = setdiff(names(dt), valid_module[[1]])]
+    # find value
+    browser()
+    nm_val <- dt[, {
+        suppressWarnings(
+            names(.SD)[which.max(lapply(.SD, function(x) sum(!is.na(as.numeric(x)))))]
+        )
+    }, .SDcols = setdiff(names(dt), c(valid_module[[1]], nm_var))]
+    # rename columns
+    setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
+    # get names without above columns
+    nms_dt <- setdiff(names(dt), c('module', 'variable', 'value'))
+    # has instance?
+    dt[, has_instance := grepl('[', module, fixed = TRUE)]
+    # add instance parent
+    dt[, c('module_wo', 'instance') := list(module, '')]
+    dt[(has_instance), c('module_wo', 'instance') := {
+        spl <- strsplit(module, '[[]|[]]')
+        list(
+            unlist(lapply(spl, function(x) paste0(x[-2], collapse = ''))),
+            unlist(lapply(spl, '[', 2))
+            )
+    }]
+    # find
+    # check mandatory
+    # check residual if exist
+    # validate -> loop (by) over temp col remarks
+    #       \-> set names of temp to temp_ -> name collision
+    # check for input columns + simulation/farm id
+    loop over nms_dt
+    # simulation id: unique over all valid entries
+    # farm id: unique over within-farm valid entries
+    # if ncol > 3 -> do we find simulation and/or farm id in them?
+    # or: search for input -> what is left?
 }
+
+run_model('./tests/inputs-version6-rest.csv')
+
+# Fun: fast %in% via C++ set..?
+# lualine -> clone + change buffer function + change highlighting of alternate file (#)
 
 # TODO:
 #   - validate input file
