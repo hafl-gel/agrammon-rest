@@ -110,7 +110,7 @@ check_and_validate <- function(dt) {
     # rename columns
     setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
     # get names without above columns
-    nms_dt <- setdiff(names(dt), c('module', 'variable', 'value'))
+    nms_extra_cols <- setdiff(names(dt), c('module', 'variable', 'value'))
     # has instance?
     dt[, has_instance := grepl('[', module, fixed = TRUE)]
     # add module without instance with variable
@@ -126,8 +126,6 @@ check_and_validate <- function(dt) {
             unlist(lapply(spl, '[', 2))
             )
     }]
-    # added names:
-    added_names <- c('module', 'variable', 'value', 'has_instance', 'module_var', 'instance')
     # rename temp names
     setnames(temp, names(temp), paste0(names(temp), '_'))
     #########
@@ -187,23 +185,43 @@ check_and_validate <- function(dt) {
             }
         } else if(nms_tab != 1) {
             # check farm id in additional columns
-            if (length(nms_dt) == 0) {
+            if (length(nms_extra_cols) == 0) {
                 # missing farm id
                 stop('A column containing the farm id is required\n',
                     '    if more than one farm is specified in the input!')
             }
-            # TODO:
+            # get lengths of unique entries
+            nc <- dt[, {
+                lapply(.SD, function(x) {
+                        lux <- length(unique(x))
+                        # check unique col entries != ''
+                        if (lux == 1 && x[1] == '') {
+                            0L
+                        } else {
+                            lux
+                        }
+                    })
+            }, .SDcols = nms_extra_cols]
             # get fic_ (farm id col) name (error if not found)
-            cat('line 195...\n')
-            browser()
-            .SD
-            # check unique col entries != ''
-            if (!is.null(unique_cols)) {
-                    # TODO: check here
+            if (any(nf <- nc == nms_tab)) {
+                fic_ <- nms_extra_cols[nf]
+                if (sum(nf) > 1) {
+                    # check if columns are correlating
+                    check_me <- dt[, paste(.SD, sep = ';'), .SDcols = fic_]
+                    if (length(unique(check_me)) != nms_tab) {
+                        # farm id col not detectable
+                        stop('farm id column cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
+                        # could be solved by checking each set according to fic_ entries, but this is too much hassle...
+                    }
+                }
+            }
+            # get unique cols
+            if (any(nf <- nc == 1)) {
+                unique_cols <- nms_extra_cols[nf]
             }
         } else {
             # check additional columns
-            if (length(nms_dt) > 0) {
+            if (length(nms_extra_cols) > 0) {
                 # find unique col entries != ''
                 unique_cols <- dt[, {
                     ind <- which(unlist(lapply(.SD, function(x) {
@@ -215,7 +233,7 @@ check_and_validate <- function(dt) {
                     } else {
                         NULL
                     }
-                }, .SDcols = setdiff(names(dt), added_names)]
+                }, .SDcols = nms_extra_cols]
             }
         }
         # return
@@ -272,7 +290,9 @@ check_and_validate <- function(dt) {
 
 # TODO: check all cases!!!
 # file <- './tests/input_data/test_1farm_no_id.csv'
-file <- './tests/input_data/test_1farm_incl_id.csv'
+# file <- './tests/input_data/test_1farm_incl_id.csv'
+# file <- './tests/input_data/test_3farms_no_id.csv'
+file <- './tests/input_data/test_3farms_incl_id.csv'
 
 dtable <- fread(file)
 check_and_validate(dtable)
