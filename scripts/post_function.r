@@ -69,13 +69,24 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
 check_and_validate <- function(dt, simulation, farm_id) {
     # read input vars
     temp <- create_template(TRUE)
+    # remove Note: and NA rows???
+    temp <- temp[!is.na(module)][!grepl('Note:', module, fixed = TRUE)]
     # has instance?
     temp[, has_instance := grepl('[', module, fixed = TRUE)]
-    # add instance parent
-    temp[, module_wo := module]
-    temp[(has_instance), module_wo := {
-        unlist(lapply(strsplit(module, '[[]|[]]'), function(x) paste0(x[-2], collapse = '')))
+    # add module without instance with variable
+    temp[, module_var := paste(module, variable, sep = ';')]
+    temp[(has_instance), module_var := {
+        paste(
+            unlist(lapply(strsplit(module, '[[]|[]]'), function(x) paste0(x[-2], collapse = ''))),
+            variable,
+            sep = ';'
+            )
     }]
+    # values from mandatory enums
+    mand_enums <- temp[default == '' & !grepl(
+        '^$|^between|^greater( or equal)? th(a|e)n|^smaller( or equal)? th(a|e)n', 
+        remarks),
+        unlist(strsplit(remarks, split = ',', fixed = TRUE))]
     # find module
     valid_module <- dt[, {
         check_semicolon <- lapply(.SD, grepl, pattern = "::", fixed = TRUE)
@@ -88,12 +99,9 @@ check_and_validate <- function(dt, simulation, farm_id) {
     nm_var <- dt[, {
         names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% temp[, variable])))]
     }, .SDcols = setdiff(names(dt), valid_module[[1]])]
-    # find value
-    browser()
+    # find value (mandatory entries)
     nm_val <- dt[, {
-        suppressWarnings(
-            names(.SD)[which.max(lapply(.SD, function(x) sum(!is.na(as.numeric(x)))))]
-        )
+        names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% mand_enums)))]
     }, .SDcols = setdiff(names(dt), c(valid_module[[1]], nm_var))]
     # rename columns
     setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
@@ -101,31 +109,51 @@ check_and_validate <- function(dt, simulation, farm_id) {
     nms_dt <- setdiff(names(dt), c('module', 'variable', 'value'))
     # has instance?
     dt[, has_instance := grepl('[', module, fixed = TRUE)]
-    # add instance parent
-    dt[, c('module_wo', 'instance') := list(module, '')]
-    dt[(has_instance), c('module_wo', 'instance') := {
+    # add module without instance with variable
+    dt[, c('module_var', 'instance') := list(paste(module, variable, sep = ';'), '')]
+    dt[(has_instance), c('module_var', 'instance') := {
         spl <- strsplit(module, '[[]|[]]')
         list(
-            unlist(lapply(spl, function(x) paste0(x[-2], collapse = ''))),
+            paste(
+                unlist(lapply(spl, function(x) paste0(x[-2], collapse = ''))),
+                variable,
+                sep = ';'
+                ),
             unlist(lapply(spl, '[', 2))
             )
     }]
-    # find
-    # check mandatory
+    # rename temp names
+    setnames(temp, names(temp), paste0(names(temp), '_'))
+    browser()
+    #########
+    # check mandatory - without instance
+    dt[module_var %chin% temp[!(has_instance_)][default_ %chin% '', module_var_], {
+        # do below here
+    }]
+    #   select all variable within mandatories
+    #   loop by module_var & variable with instance == ''
+    #   get number of entries -> number of
     # check residual if exist
     # validate -> loop (by) over temp col remarks
     #       \-> set names of temp to temp_ -> name collision
-    # check for input columns + simulation/farm id
-    loop over nms_dt
+    # invalid entries:
+    dt[!(module_var %chin% temp[, module_var_])]
+    #########
+    # find/check for input columns + simulation/farm id
+    #   \-> loop over nms_dt
     # simulation id: unique over all valid entries
     # farm id: unique over within-farm valid entries
     # if ncol > 3 -> do we find simulation and/or farm id in them?
     # or: search for input -> what is left?
+    browser()
+    if (length(nms_dt) > 0) {
+        browser()
+    }
 }
 
 run_model('./tests/inputs-version6-rest.csv')
 
-# Fun: fast %in% via C++ set..?
+# Fun: fast %in%/%ex% (is in-/excluded?) via C++ set..?
 # lualine -> clone + change buffer function + change highlighting of alternate file (#)
 
 # TODO:
