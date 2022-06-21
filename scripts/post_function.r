@@ -126,6 +126,8 @@ check_and_validate <- function(dt) {
             unlist(lapply(spl, '[', 2))
             )
     }]
+    # added names:
+    added_names <- c('module', 'variable', 'value', 'has_instance', 'module_var', 'instance')
     # rename temp names
     setnames(temp, names(temp), paste0(names(temp), '_'))
     #########
@@ -192,7 +194,9 @@ check_and_validate <- function(dt) {
             }
             # TODO:
             # get fic_ (farm id col) name (error if not found)
+            cat('line 195...\n')
             browser()
+            .SD
             # check unique col entries != ''
             if (!is.null(unique_cols)) {
                     # TODO: check here
@@ -200,15 +204,18 @@ check_and_validate <- function(dt) {
         } else {
             # check additional columns
             if (length(nms_dt) > 0) {
-                # do we find farm id col?
-                # if farm id != integer -> convert and keep key (as attr to convert back)
-                # do we find simulation id?
-                # TODO:
-                browser()
-                # check unique col entries != ''
-                if (!is.null(unique_cols)) {
-                    # TODO: check here
-                }
+                # find unique col entries != ''
+                unique_cols <- dt[, {
+                    ind <- which(unlist(lapply(.SD, function(x) {
+                        ux <- unique(x)
+                        length(ux) == 1 && ux != ''
+                    })))
+                    if (length(ind) > 0) {
+                        names(.SD)[ind]
+                    } else {
+                        NULL
+                    }
+                }, .SDcols = setdiff(names(dt), added_names)]
             }
         }
     }]
@@ -260,6 +267,13 @@ check_and_validate <- function(dt) {
     # return
     list(data = dt, farm_id = fic_, unique_cols = unique_cols)
 }
+
+# TODO: check all cases!!!
+# file <- './tests/input_data/test_1farm_no_id.csv'
+file <- './tests/input_data/test_1farm_incl_id.csv'
+
+dtable <- fread(file)
+check_and_validate(dtable)
 
 run_model('./tests/inputs-version6-rest.csv')
 
