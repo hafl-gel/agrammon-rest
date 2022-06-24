@@ -21,36 +21,34 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         stop('package "data.table" is not available!\n\n', 
             '    install.packages("data.table")\n\n')
     }
-
     # create handle
     hdl <- curl::new_handle()
-
     # set request option to post:
     curl::handle_setopt(hdl, customrequest = 'POST')
-
     # check token
     if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
         stop('no agrammon token available')
     } else if (!is.character(token) || token == '') {
         stop('input to argument "token" cannot be valid')
     }
-
+    # help user
+    message('validating input file... ', appendLF = FALSE)
     # read input file
     raw_input <- fread(file = input_file, showProgress = FALSE)
-
     # validate input
     valid_data <- check_and_validate(raw_input)
-
     # prepare input 
     loop_data <- valid_data$data[, .(farm_id_, module, variable, value)]
-
+    # help user
+    message('ok')
     # add header part
     curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
         'Authorization' = paste0('Bearer ', token = token),
         'Accept' = 'text/csv'
         )
-
+    # help user
+    message('sending data ...')
     # loop over data
     res <- loop_data[, {
         # write to character input
@@ -66,15 +64,20 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
             'print-only' = model_options[['print']],
             inputs = form_data(input_data, "text/csv")
         )
+        # help user
+        message('farm #', .BY$farm_id_, appendLF = FALSE)
         # call model
         req <- curl_fetch_memory(sprintf('%s/run', Sys.getenv('agrammon_rest_url')), 
             handle = hdl)
         # check return
         char <- check_request(req)
+        # help user
+        message(' done')
         # convert to data.table
         fread(text = char)[, -(1:2)]
     }, by = farm_id_]
-
+    # help user
+    message('cleaning up...')
     # set colnames
     setnames(res, paste0('V', 3:7), c('module', 'variable', 'filter', 'value', 'unit'))
     # get names
@@ -100,14 +103,14 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     res[]
 }
 
-# TODO: check all cases!!!
-# file <- './tests/inputs-version6-rest.csv'
-# file <- './tests/input_data/test_1farm_no_id.csv'
-# file <- './tests/input_data/test_1farm_incl_id.csv'
-# file <- './tests/input_data/test_3farms_no_id.csv'
-file <- './tests/input_data/test_3farms_incl_id.csv'
+# # TODO: check all cases!!!
+# # file <- './tests/inputs-version6-rest.csv'
+# # file <- './tests/input_data/test_1farm_no_id.csv'
+# # file <- './tests/input_data/test_1farm_incl_id.csv'
+# # file <- './tests/input_data/test_3farms_no_id.csv'
+# file <- './tests/input_data/test_3farms_incl_id.csv'
 
-run_model(file)
+# run_model(file)
 
 check_and_validate <- function(dt) {
     # read input vars
