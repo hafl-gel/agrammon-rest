@@ -1,3 +1,11 @@
+
+# TODO:
+#   - function wide_output (summary a la Hochrechnung by Tierkat./Farm?/Tracer?)
+#   - run_model: option 'report' = summary/detailed/full -> hide print
+#   - remove model_options argument, add language = ...
+#   - don't export agrammon_options, run_model, ...
+#   - add function agrammon/run_agrammon/...?
+
 #' title
 #'
 #' description
@@ -326,20 +334,6 @@ check_and_validate <- function(dt) {
     c(list(data = dt), list_ids)
 }
 
-
-# Fun: fast %in%/%ex% (is in-/excluded?) via C++ set..?
-# lualine -> clone + change buffer function + change highlighting of alternate file (#)
-
-# TODO:
-#   - validate input file
-#   - extract simulation & ... from input file, if given
-#   - add option to use filters (animal cat)
-# add check_input()
-# check as csv:
-# check mandatory input vars -> ok?
-# check residual input -> does it match any optional vars?
-# remove invalid input with message?
-# add read_input (read multiple data sets from one csv)
 
 #' title
 #'
