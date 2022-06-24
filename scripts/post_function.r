@@ -69,6 +69,7 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         # write to character input
         input_data <- paste(module, variable, value, sep = ';', collapse = '\n')
         # add body
+        # TODO: change to .list with model_options
         curl::handle_setform(hdl,
             variants = model_options[['variants']],
             model = model_options[['model']],
@@ -76,6 +77,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
             simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
             dataset = as.character(.BY$farm_id_),
             language = model_options[['language']],
+            'include-filters' = model_options[['include-filters']],
+            'all-filters' = model_options[['all-filters']],
             'print-only' = model_options[['print']],
             inputs = form_data(input_data, "text/csv")
         )
@@ -373,6 +376,14 @@ agrammon_options <- function(..., show = FALSE) {
                 'LivestockNtot', 'LivestockTAN',
                 'LivestockN2', 'LivestockNO', 'LivestockN2O'
                 )
+            ),
+            'include-filters' = list(
+                help = 'show each animal category seperately?',
+                values = c('false', 'true')
+            ),
+            'all-filters' = list(
+                help = 'show all exisiting animal categories? (only if include-filters = true)',
+                values = c('false', 'true')
             ),
             variants = list(
                 help = 'model variant',
