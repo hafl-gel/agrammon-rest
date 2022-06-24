@@ -71,16 +71,10 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         # add body
         # TODO: change to .list with model_options
         curl::handle_setform(hdl,
-            variants = model_options[['variants']],
-            model = model_options[['model']],
-            technical = model_options[['technical']],
             simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
             dataset = as.character(.BY$farm_id_),
-            language = model_options[['language']],
-            'include-filters' = model_options[['include-filters']],
-            'all-filters' = model_options[['all-filters']],
-            'print-only' = model_options[['print']],
-            inputs = form_data(input_data, "text/csv")
+            inputs = form_data(input_data, "text/csv"),
+            .list = model_options
         )
         # help user
         message('  farm #', .BY$farm_id_, appendLF = FALSE)
@@ -367,7 +361,7 @@ agrammon_options <- function(..., show = FALSE) {
                 help = 'language in output', 
                 values = c('en', 'de', 'fr')
                 ),
-            print = list(
+            'print-only' = list(
                 help = 'output subset(s) to return\n    ("" == detailed model output)',
                 values = c('', 
                 'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
