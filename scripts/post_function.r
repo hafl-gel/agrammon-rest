@@ -103,14 +103,17 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         # replace entries
         res[, farm_id := farm_key[farm_id_]]
     }
-    # move farm_id to front
-    setcolorder(res, c('farm_id', nms))
-    # remove farm_id_
-    res[, farm_id_ := NULL]
+    # add 'stage' (top module)
+    res[, stage := sub('^([a-zA-Z]*)::.*', '\\1', module)]
     # add unique cols
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
+        nms <- c(nms, valid_data$unique_cols)
     }
+    # reorder columns
+    setcolorder(res, c('farm_id', 'stage', nms))
+    # remove farm_id_
+    res[, farm_id_ := NULL]
     # help user
     message('\n~~~~ finished ~~~~\n')
     # return
