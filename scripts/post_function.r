@@ -11,7 +11,6 @@
 #' run_model('./tests/inputs-version6-rest.csv', language = 'de')
 run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%M'),
     farm_id = NULL, model_options = agrammon_options(...), ..., token = NULL) {
-
     # check if curl is installed
     if (!require('curl')) {
         stop('package "curl" is not available!\n\n', 

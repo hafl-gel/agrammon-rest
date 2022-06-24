@@ -1,8 +1,6 @@
 
 ## 0. header ----------------------------------------
 
-library(curl)
-library(jsonlite)
 library(data.table)
 
 ## 1. read model dump (input variables) ----------------------------------------
@@ -17,9 +15,13 @@ library(data.table)
 get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
     sort = c('model', 'calculation')[1], token = Sys.getenv('AGRAMMON_TOKEN')) {
     # check if curl is installed
-    if (!requireNamespace('curl')) {
+    if (!require('curl')) {
         stop('package "curl" is not available!\n\n', 
             '    install.packages("curl")\n\n')
+    }
+    if (!require('jsonlite')) {
+        stop('package "jsonlite" is not available!\n\n', 
+            '    install.packages("jsonlite")\n\n')
     }
     # create handle
     hdl <- curl::new_handle()
