@@ -24,6 +24,11 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         stop('package "curl" is not available!\n\n', 
             '    install.packages("curl")\n\n')
     }
+    # check if jsonlite is installed
+    if (!require('jsonlite')) {
+        stop('package "jsonlite" is not available!\n\n', 
+            '    install.packages("jsonlite")\n\n')
+    }
     # check if data.table is installed
     if (!require('data.table')) {
         stop('package "data.table" is not available!\n\n', 
