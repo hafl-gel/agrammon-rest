@@ -69,8 +69,10 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         # call model
         req <- curl_fetch_memory(sprintf('%s/run', Sys.getenv('agrammon_rest_url')), 
             handle = hdl)
+        # check return
+        char <- check_request(req)
         # convert to data.table
-        fread(text = rawToChar(req$content))[, -(1:2)]
+        fread(text = char)[, -(1:2)]
     }, by = farm_id_]
 
     # set colnames

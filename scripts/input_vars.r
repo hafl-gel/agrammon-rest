@@ -42,13 +42,30 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
         Sys.getenv('agrammon_rest_url'), sort[1], format[1], language[1])
     # send request
     req <- curl_fetch_memory(url, handle = hdl)
-    # convert to char
-    char <- rawToChar(req$content)
+    # check return
+    char <- check_request(req)
     # parse answer and return
     switch(format[1],
         json = parse_json(char),
         csv = read.table(text = char, sep = ';', stringsAsFactors = FALSE),
         char
+        )
+}
+
+
+# helper (document with roxygen2)
+check_request <- function(req) {
+    # convert to char
+    char <- rawToChar(req$content)
+    # return if ok
+    if (req$status == 200) return(char)
+    # capture request (http) errors
+    cat('\n')
+    switch (paste0('code_', char)
+        # success
+        , 'code_' = stop('http request status ', req$status, call. = FALSE)
+        # otherwise
+        , stop('http request - ', sub('.*<title>(.*)</title>.*', '\\1', char), call. = FALSE)
         )
 }
 
