@@ -1,10 +1,4 @@
 
-## 0. header ----------------------------------------
-
-library(data.table)
-
-## 1. read model dump (input variables) ----------------------------------------
-
 #' get model dump
 #'
 #' helper function to get model dump via REST interface
@@ -129,8 +123,6 @@ read_input_vars <- function(x, language = 'de', module = '') {
     out
 }
 
-
-## 2. create user template ----------------------------------------
 
 #' create template in R
 #'

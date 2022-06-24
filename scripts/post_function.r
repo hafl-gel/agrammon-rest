@@ -73,7 +73,7 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
             inputs = form_data(input_data, "text/csv")
         )
         # help user
-        message('farm #', .BY$farm_id_, appendLF = FALSE)
+        message('  farm #', .BY$farm_id_, appendLF = FALSE)
         # call model
         req <- curl_fetch_memory(sprintf('%s/run', Sys.getenv('agrammon_rest_url')), 
             handle = hdl)
