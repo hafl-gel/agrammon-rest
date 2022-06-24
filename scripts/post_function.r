@@ -67,7 +67,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
             inputs = form_data(input_data, "text/csv")
         )
         # call model
-        req <- curl_fetch_memory("https://model.agrammon.ch/singleRest/api/v1/run", handle = hdl)
+        req <- curl_fetch_memory(sprintf('%s/run', Sys.getenv('agrammon_rest_url')), 
+            handle = hdl)
         # convert to data.table
         fread(text = rawToChar(req$content))[, -(1:2)]
     }, by = farm_id_]

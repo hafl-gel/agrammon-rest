@@ -38,8 +38,8 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
         'Accept' = 'application/json'
         )
     # url
-    url <- sprintf("https://model.agrammon.ch/single/test/api/v1/inputTemplate?sort=%s&format=%s&language=%s",
-        sort[1], format[1], language[1])
+    url <- sprintf("%s/inputTemplate?sort=%s&format=%s&language=%s",
+        Sys.getenv('agrammon_rest_url'), sort[1], format[1], language[1])
     # send request
     req <- curl_fetch_memory(url, handle = hdl)
     # convert to char
