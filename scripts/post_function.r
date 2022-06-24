@@ -34,6 +34,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
         stop('package "data.table" is not available!\n\n', 
             '    install.packages("data.table")\n\n')
     }
+    # help user
+    message('\n~~~~ AGRAMMON REST call ~~~~\n')
     # create handle
     hdl <- curl::new_handle()
     # set request option to post:
@@ -112,6 +114,8 @@ run_model <- function(input_file, simulation = format(Sys.time(), '%Y-%m-%d %H:%
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
     }
+    # help user
+    message('\n~~~~ finished ~~~~\n')
     # return
     res[]
 }
