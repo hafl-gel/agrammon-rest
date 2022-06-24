@@ -1,16 +1,45 @@
-
-# TODO: replace option(agrammon.token) with Sys.getenv('AGRAMMON_TOKEN')
-# register token in Renviron file (code thievery from ggmap::register_google)
+#' Register token
+#'
+#' register an Agrammon REST interface access token for the current R session
+#' or permanently
+#'
+#' @details
+#' This function registers the \code{token} to access Agrammons REST interface in the 
+#' current R session. 
+#' If the argument \code{permanent} is \code{TRUE} (default), the 
+#' provided \code{token} will be saved to the user Renviron file in the path 
+#' \code{file.path(Sys.getenv("HOME"), ".Renviron")}.
+#' The idea and the utilized code how to keep the token permanently is to a large part 
+#' taken from the function \code{register_google} in the package \code{ggmap}. 
+#' @section Personal token
+#' You can request a personal access token at support@agrammon.ch
+#'
+#' @references
+#' https://github.com/oposs/agrammon, 
+#'
+#' @seealso
+#' https://github.com/oposs/agrammon, link to agrammon REST interface docu
+#'
+#' @param token Agrammon REST-API access token.
+#' @param permanent ...
+#' @export
 register_token <- function(token, permanent = TRUE) {
-    # check token
-    if (!missing(token) && permanent) {
+    # check arguments
+    if (missing(token)) stop('argument "token" missing')
+    if (!is.character(token)) stop('argument "token" is not of type character')
+    if (length(token) > 1) stop('argument "token" has length > 1 - you can only register one single token')
+    if (!is.logical(permanent)) stop('argument "permanent" must be of type logical')
+    # premanent registering?
+    if (permanent) {
         # get Renviron path
         environ_file <- file.path(Sys.getenv("HOME"), ".Renviron")
         if (!file.exists(file.path(Sys.getenv("HOME"), ".Renviron"))) {
             message(sprintf("Creating file %s", environ_file))
             file.create(environ_file)
         }
+        # read file
         environ_lines <- readLines(environ_file)
+        # find existing token entries and replace them
         token_line <- grep("AGRAMMON_TOKEN=", environ_lines)
         if (length(token_line) == 0) {
             message(sprintf("Adding token to %s", environ_file))
@@ -26,10 +55,9 @@ register_token <- function(token, permanent = TRUE) {
             environ_lines[token_line] <- sprintf("AGRAMMON_TOKEN=%s", token)
             writeLines(environ_lines, environ_file)
         }
-        Sys.setenv(AGRAMMON_TOKEN = token)
     }
-    else if (!missing(token) && !permanent) {
-        Sys.setenv(AGRAMMON_TOKEN = token)
-    }
+    # register token for current session
+    Sys.setenv(AGRAMMON_TOKEN = token)
+    # return null
     invisible()
 }
