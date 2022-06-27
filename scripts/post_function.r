@@ -3,11 +3,22 @@
 #   - function wide_output (summary a la Hochrechnung by Tierkat./Farm?/Tracer?)
 #   - don't export agrammon_options, run_model, ...
 #   - function save to excel
+#   - function to check & summarize input file
 
-# report: summary, detailed, full
+#' title
+#'
+#' description
+#'
+#' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
+#' @return  result from an Agrammon model run
+#' @export
+#' @examples
+#' ## examples here
+#' run_agrammon('./tests/inputs-version6-rest.csv')
+#' run_agrammon('./tests/inputs-version6-rest.csv', report = 'NH3', filter = 'ex')
 run_agrammon <- function(input_file, 
     report = c('summary', 'detailed', 'full', 'NH3', 'TAN', 'N', 'HAFL')[1],
-    results = c('total', 'existing_categories', 'all_categories')[1], 
+    filter = c('total_only', 'existing_categories', 'all_categories')[1], 
     language = c('en', 'de', 'fr')[1], token = NULL, ...) {
     # check input_file
     if (!is.character(input_file)) {
@@ -39,20 +50,20 @@ run_agrammon <- function(input_file,
         # check report
         print_only <- check_report(report)
     }
-    # results
-    if (!missing(results)) {
-        # check argument results
-        if (length() != 1 || !is.character(results) || 
-            is.na(results <- pmatch(results, eval(formals(run_agrammon)[['results']][[2]])))) {
-            stop('argument "results" is not valid')
+    # filter
+    if (!missing(filter)) {
+        # check argument filter
+        if (length(filter) != 1 || !is.character(filter) || 
+            is.na(filter <- pmatch(filter, eval(formals(run_agrammon)[['filter']][[2]])))) {
+            stop('argument "filter" is not valid')
         }
         # check 'include-filters' and 'all-filters'
-        if (any(c('include-filters', 'all-filters' %in% names(dots)))) {
-            stop('either argument "results" or arguments "include-filters"',
+        if (any(c('include-filters', 'all-filters') %in% names(dots))) {
+            stop('either argument "filter" or arguments "include-filters"',
                 ' and/or "all-filters" can be defined, but not both')
         }
         # assign filter
-        filter <- switch(results,
+        filter <- switch(filter,
             total = c('false', 'false'),
             existing_categories = c('true', 'false'),
             all_categories = c('true', 'true')
@@ -73,7 +84,7 @@ run_agrammon <- function(input_file,
                 'print-only' = print_only,
                 'include-filters' = filter[1],
                 'all-filters' = filter[2],
-                'language' = language,
+                'language' = language
             ),
             dots[!(names(dots) %in% 
                 c('print-only', 'include-filters', 'all-filters', 'language'))]
@@ -138,7 +149,7 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
         )
     # help user
     message('sending data ...')
-    # loop over data
+    # loop over data (and re-order rows)
     res <- loop_data[, {
         # write to character input
         input_data <- paste(module, variable, value, sep = ';', collapse = '\n')
@@ -159,7 +170,8 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
         # help user
         message(' done')
         # convert to data.table
-        fread(text = char)[, -(1:2)]
+        fread(text = char, colClasses = c('character', 'integer',
+                rep('character', 3), 'numeric', 'character'))[, -(1:2)]
     }, by = farm_id_]
     # help user
     message('cleaning up...')
@@ -185,6 +197,9 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     }
     # reorder columns
     setcolorder(res, c('farm_id', 'stage', nms))
+    # reorder rows
+    stages_out <- c('Livestock', 'Storage', 'Application', 'Total')
+    res <- res[order(farm_id_, match(stage, stages_out, nomatch = 999))]
     # remove farm_id_
     res[, farm_id_ := NULL]
     # help user
