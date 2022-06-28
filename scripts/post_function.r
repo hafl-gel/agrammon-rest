@@ -171,15 +171,25 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
         # help user
         message(' done')
         # convert to data.table
-        fread(text = char, colClasses = c('character', 'integer',
-                rep('character', 3), 'numeric', 'character'))[, -(1:2)]
+        out <- fread(text = char, colClasses = 'character')[, -(1:2)]
     }, by = farm_id_]
     # help user
     message('cleaning up...')
     # set colnames
     setnames(res, paste0('V', 3:7), c('module', 'variable', 'filter', 'value', 'unit'))
-    # get names
+    # get names and reorder
     nms <- copy(names(res))
+    # add numeric value column
+    suppressWarnings(res[, value_num := as.numeric(value)])
+    # remove replace value by value_num if all numeric
+    if (res[, !anyNA(value_num)]) {
+        res[, value := value_num]
+        res[, value_num := NULL]
+    } else {
+        res[, value_chr := value]
+        res[!is.na(value_num), value_chr := NA_character_]
+        nms <- c(nms, 'value_num', 'value_chr')
+    }
     # add farm id
     if (is.null(valid_data$farm_id)) {
         res[, farm_id := 1L]
@@ -196,10 +206,19 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # add unique cols
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
-        nms <- c(nms, valid_data$unique_cols)
+        if (length(valid_data$unique_cols) == 1) {
+            # rename unique column
+            setnames(res, valid_data$unique_cols, 'simulation')
+            # reorder columns
+            setcolorder(res, c('simulation', 'farm_id', 'stage', 'tracer', nms))
+        } else {
+            # reorder columns
+            setcolorder(res, c('farm_id', 'stage', 'tracer', nms, valid_data$unique_cols))
+        }
+    } else {
+        # reorder columns
+        setcolorder(res, c('farm_id', 'stage', 'tracer', nms))
     }
-    # reorder columns
-    setcolorder(res, c('farm_id', 'stage', 'tracer', nms))
     # reorder rows
     stages_out <- c('Livestock', 'Storage', 'Application', 'Total')
     res <- res[order(farm_id_, match(stage, stages_out, nomatch = 999))]
