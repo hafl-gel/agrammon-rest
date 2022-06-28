@@ -1,6 +1,5 @@
 
 # TODO:
-#   - function wide_output (summary a la Hochrechnung by Tierkat./Farm?/Tracer?)
 #   - don't export agrammon_options, run_model, ...
 #   - function save to excel
 
@@ -232,6 +231,62 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # return
     res[]
 }
+
+#' title
+#'
+#' description
+#'
+#' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
+#' @return  result from an Agrammon model run
+#' @export
+#' @examples
+#' ## examples here
+#' wide_output(res)
+wide_output <- function(x) {
+    # set sorting
+    sort_tracer <- c('nh3', 'n', 'tan', 'n2', 'no', 'n2o')
+    sort_stage <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
+    sort_filter <- c('dairy_cows', 'heifers_1st_yr', 'heifers_2nd_yr', 'heifers_3rd_yr',
+        'suckling_cows', 'calves_suckling_cows', 'beef_cattle', 'fattening_calves', 'dry_sows',
+        'nursing_sows', 'weaned_piglets_up_to_25kg', 'boars', 'fattening_pigs', 'growers', 'layers',
+        'broilers', 'turkeys', 'other_poultry', 'horses_older_than_3yr', 'horses_younger_than_3yr', 
+        'ponies_and_asses', 'fattening_sheep', 'milksheep', 'goats')
+    # check if data.table
+    if (isdf <- !is.data.table(x)) {
+        setDT(x)
+    } else {
+        x <- copy(x)
+    }
+    # check if any var type != 'internal'
+    if (x[, all(variable_type == 'internal')]) {
+        stop('no loss or flow variables in results')
+    }
+    # sort by tracer & stage
+    y <- x[variable_type != 'internal' & filter != 'total'][, c('s_tracer', 's_stage') := {
+        list(
+            frank(factor(tracer, levels = sort_tracer), ties.method = 'dense'),
+            frank(factor(stage, levels = sort_stage), ties.method = 'dense')
+            )
+    }]
+    # dcast to wide
+    out <- dcast(y, farm_id + filter ~ s_tracer + s_stage + variable, value.var = 'value')
+    # remove sorting indices
+    setnames(out, names(out), sub('^[0-9]+_[0-9]+_', '', names(out)))
+    # remove filter if '' or sort
+    if (out[, filter[1] == '']) {
+        out[, filter := NULL]
+    } else {
+        out <- out[order(farm_id, match(filter, sort_filter, nomatch = 9999))]
+    }
+    # change back to data.frame
+    if (isdf) {
+        setDF(out)
+    }
+    # return
+    out[]
+}
+
+
 
 # check input file
 # possible different approach: 
