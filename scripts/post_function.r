@@ -203,6 +203,9 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     res[, stage := sub('^([a-zA-Z]*)::.*', '\\1', module)]
     # add tracer column
     res[, tracer := sub('((nh3|n2|no|n2o|n|tan)_)?.*', '\\2', variable)]
+    # add type column
+    res[, variable_type := 'internal'][tracer %in% c('n', 'tan'), variable_type := 'flow']
+    res[tracer %in% c('nh3', 'n2', 'no', 'n2o'), variable_type := 'loss']
     # add unique cols
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
@@ -210,14 +213,14 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
             # rename unique column
             setnames(res, valid_data$unique_cols, 'simulation')
             # reorder columns
-            setcolorder(res, c('simulation', 'farm_id', 'stage', 'tracer', nms))
+            setcolorder(res, c('simulation', 'farm_id', 'stage', 'variable_type', 'tracer',  nms))
         } else {
             # reorder columns
-            setcolorder(res, c('farm_id', 'stage', 'tracer', nms, valid_data$unique_cols))
+            setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms, valid_data$unique_cols))
         }
     } else {
         # reorder columns
-        setcolorder(res, c('farm_id', 'stage', 'tracer', nms))
+        setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms))
     }
     # reorder rows
     stages_out <- c('Livestock', 'Storage', 'Application', 'Total')
