@@ -313,7 +313,7 @@ print_input <- function(input) {
         message('  ', fid, ' unique farm ID', if(fid > 1) 's')
     }
     # summarize instances by farm id
-    in_data[, {
+    in_data[instance != '', {
         # structure
         message('---')
         # key
@@ -332,6 +332,16 @@ print_input <- function(input) {
         mcattle <- key[variable %chin% 'contains_cattle_manure']
         # contains pig manure?
         mpig <- key[variable %chin% 'contains_pig_manure']
+        # extend dairy_cows and fattening_pigs
+        missed <- setdiff(unique(instance), unique(c(names(acat), names(vol))))
+        for (nm in missed) {
+            # check if dairy_cows or fp
+            if ('milk_yield' %in% variable[instance == nm]) {
+                acat <- c(acat, setNames('dairy_cows', nm))
+            } else {
+                acat <- c(acat, setNames('fattening_pigs', nm))
+            }
+        }
         # indicate farm id
         message('"', .BY[[1]], '":')
         # loop over livestock instances
@@ -345,14 +355,16 @@ print_input <- function(input) {
             message('      "', sti, '": ', vol[sti], ' m3 (cattle: ', mcattle[sti],', pig: ', mpig[sti],')')
         }
         # empty line
-        message('')
-        # add 'empty' animal cats
-        if (sum(num == 0) > 0) {
-            message('        -> instances with 0 animals: ', paste(names(num)[num == 0], collapse = ','))
-        }
-        # add 'empty' animal cats
-        if (sum(vol == 0) > 0) {
-            message('        -> tanks with volume == 0: ', paste(names(vol)[vol == 0], collapse = ','))
+        if (any(c(num, vol) == 0)) {
+            message('')
+            # add 'empty' animal cats
+            if (any(num == 0)) {
+                message('        -> instances with 0 animals: ', paste(names(num)[num == 0], collapse = ','))
+            }
+            # add 'empty' animal cats
+            if (any(vol == 0)) {
+                message('        -> tanks with volume == 0: ', paste(names(vol)[vol == 0], collapse = ','))
+            }
         }
     }, by = id]
     # be verbose
