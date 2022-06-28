@@ -4,6 +4,7 @@
 #   - don't export agrammon_options, run_model, ...
 #   - function save to excel
 #   - function to check & summarize input file
+#   - get tracer column
 
 #' title
 #'
@@ -190,13 +191,15 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     }
     # add 'stage' (top module)
     res[, stage := sub('^([a-zA-Z]*)::.*', '\\1', module)]
+    # add tracer column
+    res[, tracer := sub('((nh3|n2|no|n2o|n|tan)_)?.*', '\\2', variable)]
     # add unique cols
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
         nms <- c(nms, valid_data$unique_cols)
     }
     # reorder columns
-    setcolorder(res, c('farm_id', 'stage', nms))
+    setcolorder(res, c('farm_id', 'stage', 'tracer', nms))
     # reorder rows
     stages_out <- c('Livestock', 'Storage', 'Application', 'Total')
     res <- res[order(farm_id_, match(stage, stages_out, nomatch = 999))]
