@@ -567,7 +567,7 @@ agrammon_options <- function(..., show = FALSE) {
     # loop over free options
     for (fnms in names(defaults[['free']])) {
         if (fnms %in% names(dots)) {
-            if (fnms == 'print' & length(dots[[fnms]]) > 1) {
+            if (fnms == 'print-only' & length(dots[[fnms]]) > 1) {
                 # check for empty string
                 if (any(dots[[fnms]] %in% c('', ' '))) {
                     out[[fnms]] <- ''
