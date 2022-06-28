@@ -3,7 +3,6 @@
 #   - function wide_output (summary a la Hochrechnung by Tierkat./Farm?/Tracer?)
 #   - don't export agrammon_options, run_model, ...
 #   - function save to excel
-#   - function to check & summarize input file
 
 #' title
 #'
@@ -137,10 +136,12 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     raw_input <- fread(file = input_file, showProgress = FALSE)
     # validate input
     valid_data <- check_and_validate(raw_input)
-    # prepare input 
-    loop_data <- valid_data$data[, .(farm_id_, module, variable, value)]
     # help user
     message('ok')
+    # print input (be verbose)
+    print_input(valid_data)
+    # prepare input 
+    loop_data <- valid_data$data[, .(farm_id_, module, variable, value)]
     # add header part
     curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
@@ -227,6 +228,77 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     message('\n~~~~ finished ~~~~\n')
     # return
     res[]
+}
+
+# check input file
+# possible different approach: 
+#   read_input (+ validate)
+#   print.agrammon_input
+#   run_model with input instead of file
+print_input <- function(input) {
+    # copy data
+    in_data <- copy(input$data)
+    # be verbose
+    message('input data:')
+    # check farm_id
+    if (is.null(input$farm_id)) {
+        # be verbose
+        message('  1 farm')
+        # assign farm id column
+        in_data[, id := 1L]
+    } else {
+        # assign farm id
+        in_data[, id := get(input$farm_id)]
+        # number of ids
+        fid <- in_data[, length(unique(id))]
+        # be verbose
+        message('  ', fid, ' unique farm ID', if(fid > 1) 's')
+    }
+    # summarize instances by farm id
+    in_data[, {
+        # structure
+        message('---')
+        # key
+        key <- setNames(value, instance)
+        # animalcategory
+        acat <- key[variable %chin% 'animalcategory']
+        # animals
+        num <- key[variable %chin% 'animals']
+        # convert to numeric
+        mode(num) <- 'numeric'
+        # volume
+        vol <- key[variable %chin% 'volume']
+        # convert to numeric
+        mode(vol) <- 'numeric'
+        # contains cattle manure?
+        mcattle <- key[variable %chin% 'contains_cattle_manure']
+        # contains pig manure?
+        mpig <- key[variable %chin% 'contains_pig_manure']
+        # indicate farm id
+        message('"', .BY[[1]], '":')
+        # loop over livestock instances
+        if (any(num > 0)) message('    livestock instances:')
+        for (lsi in names(num[num > 0])) {
+            message('      "', lsi, '": ', num[lsi], ' animals (', acat[lsi], ')')
+        }
+        # loop over tank instances
+        if (any(vol > 0)) message('    slurry tanks:')
+        for (sti in names(vol[vol > 0])) {
+            message('      "', sti, '": ', vol[sti], ' m3 (cattle: ', mcattle[sti],', pig: ', mpig[sti],')')
+        }
+        # empty line
+        message('')
+        # add 'empty' animal cats
+        if (sum(num == 0) > 0) {
+            message('        -> instances with 0 animals: ', paste(names(num)[num == 0], collapse = ','))
+        }
+        # add 'empty' animal cats
+        if (sum(vol == 0) > 0) {
+            message('        -> tanks with volume == 0: ', paste(names(vol)[vol == 0], collapse = ','))
+        }
+    }, by = id]
+    # be verbose
+    message('---')
 }
 
 # check_report helper
