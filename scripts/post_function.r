@@ -223,7 +223,7 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
         setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms))
     }
     # reorder rows
-    stages_out <- c('Livestock', 'Storage', 'Application', 'Total')
+    stages_out <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
     res <- res[order(farm_id_, match(stage, stages_out, nomatch = 999))]
     # remove farm_id_
     res[, farm_id_ := NULL]
