@@ -542,7 +542,7 @@ check_and_validate <- function(dt) {
     if (is.null(list_ids$farm_id)) {
         dt[, farm_id_ := 1L]
     } else {
-        dt[, farm_id_ := frank(factor(get(list_ids$farm_id)), ties.method = 'dense')]
+        dt[, farm_id_ := frank(factor(get(list_ids$farm_id), levels = unique(get(list_ids$farm_id))), ties.method = 'dense')]
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
