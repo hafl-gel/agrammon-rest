@@ -1,0 +1,38 @@
+---
+title: "agrammon"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{agrammon}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(agrammon)
+```
+
+# Title
+
+## Workflow
+
+- prepare input data set (CSV file)
+    - save template
+- call model
+    - check input data set
+    - print data set summary
+    - call Agrammon via REST interface
+    - check result
+- store result
+    - save result to Excel file
+
+## Input Data Set
+
+## Run Agrammon
+
