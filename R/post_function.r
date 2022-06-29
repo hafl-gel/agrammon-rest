@@ -128,8 +128,6 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     hdl <- curl::new_handle()
     # set request option to post:
     curl::handle_setopt(hdl, customrequest = 'POST')
-    # check token
-    token <- check_token(token)
     # help user
     message('validating input file... ', appendLF = FALSE)
     # read input file

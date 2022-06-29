@@ -21,8 +21,6 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
     hdl <- curl::new_handle()
     # set request option to get:
     curl::handle_setopt(hdl, customrequest = 'GET')
-    # check token
-    token <- check_token(token)
     # add header part
     curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
@@ -184,8 +182,6 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
             stop('argument storage cannot contain duplicated instance names!')
         }
     }
-    # check token
-    token <- check_token(token)
     # get input dump
     inp_var <- read_input_vars(get_input_template(token = token))
     # check names of livestock
