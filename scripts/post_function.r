@@ -1,6 +1,8 @@
 
 # TODO:
 #   - don't export agrammon_options, run_model, ...
+#   - add vignette (incl. data set)
+# # TODO: check all cases!!!
 
 #' title
 #'
@@ -394,7 +396,12 @@ print_input <- function(input) {
     message('---')
 }
 
-# check_report helper
+#' Check Report Argument
+#'
+#' check report argument and return corresponding 'print-only' labels
+#'
+#' @param report string. Name of the report to generate.
+#' @return a vector of 'print-only' labels
 check_report <- function(report) {
     # define valid reports 
     #   -> see End.nhd for valid reports incl. print-only
@@ -454,15 +461,12 @@ check_token <- function(token) {
     token
 }
 
-# # TODO: check all cases!!!
-# # file <- './tests/inputs-version6-rest.csv'
-# # file <- './tests/input_data/test_1farm_no_id.csv'
-# # file <- './tests/input_data/test_1farm_incl_id.csv'
-# # file <- './tests/input_data/test_3farms_no_id.csv'
-# file <- './tests/input_data/test_3farms_incl_id.csv'
-
-# run_model(file)
-
+#' Check and Validate Agrammon Input
+#'
+#' check and validate Agrammon input
+#'
+#' @param dt a \code{data.table} of Agrammon input data
+#' @return a list with entries 'input data', 'farm_id column', 'simulation column'
 check_and_validate <- function(dt) {
     # read input vars
     temp <- create_template(TRUE)

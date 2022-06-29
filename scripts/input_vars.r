@@ -47,7 +47,12 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
 }
 
 
-# helper (document with roxygen2)
+#' Check Agrammon Return Value
+#'
+#' check the returned content of the Agrammon REST call (POST request)
+#'
+#' @param req a list object returned by the call to Agrammon REST interface
+#' @return the Agrammon result as a string 
 check_request <- function(req) {
     # convert to char
     char <- rawToChar(req$content)
@@ -65,7 +70,7 @@ check_request <- function(req) {
 
 #' process model dump
 #'
-#' helper function process model dump
+#' helper function to process model dump
 #'
 #' @param x model dump as json
 #' @return  
