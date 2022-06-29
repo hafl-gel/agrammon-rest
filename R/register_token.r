@@ -10,8 +10,10 @@
 #' provided \code{token} will be saved to the user Renviron file in the path 
 #' \code{file.path(Sys.getenv("HOME"), ".Renviron")}.
 #' The idea and the utilized code how to keep the token permanently is to a large part 
-#' taken from the function \code{register_google} in the package \code{ggmap}. 
-#' @section Personal token
+#' taken from the function \code{register_google} in the package \code{ggmap}.
+#' 
+#' Personal token: 
+#' 
 #' You can request a personal access token at support@agrammon.ch
 #'
 #' @references
