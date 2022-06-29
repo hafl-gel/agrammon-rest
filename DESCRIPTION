@@ -7,8 +7,10 @@ Author: Christoph Häni
 Maintainer: Christoph Häni <christoph@bfh.ch>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
+Encoding: UTF-8
 Depends: R (>= 4.0.0), data.table (>= 1.14.0), curl (>= 4.3.0), jsonlite (>= 1.8.0)
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+RoxygenNote: 7.2.0
