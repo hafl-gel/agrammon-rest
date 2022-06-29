@@ -334,7 +334,7 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #' written to the template file |code{file}. The list entry names must
 #' correspond to a valid animal category or parent class whereas the list entries
 #' (character vectors) will provide the instance names of the corresponding animal
-#' category (or parent class).
+#' category (or parent class) (see Examples).
 #'
 #' If \code{storage} is NULL, the first line of the template will contain a warning.
 #'
@@ -352,9 +352,11 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #' \dontrun{
 #'   # register token permanently
 #'   register_token(my_token)
+#'
 #'   # save template to file
-#'   save_template('model_template.csv', 
-#'      livestock = list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), storage = 'Tank_1')
+#'   save_template('model_template.csv', livestock = 
+#'      list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), 
+#'      storage = 'Tank_1')
 #' }
 save_template <- function(file, livestock = list(), storage = NULL, token = NULL) {
     # check token

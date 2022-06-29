@@ -19,12 +19,13 @@
 #' @seealso [save_template()], [run_agrammon()]
 #'
 #' @param token Agrammon REST-API access token.
-#' @param permanent ...
+#' @param permanent store token permanently or only for current session. See Details.
 #' @export
 #' @examples
 #' \dontrun{
 #'   # register token permanently
 #'   register_token(my_token)
+#'
 #'   # register token for current session only
 #'   register_token(my_token, permanent = FALSE)
 #' }
