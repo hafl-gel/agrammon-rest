@@ -358,17 +358,15 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
 #' @return NULL
 #' @examples
 #' \dontrun{
-#'   # "register" token -> wie?
+#'   # register token permanently
 #'   register_token(my_token)
 #'   # save template to file
 #'   save_template('model_template.csv', 
 #'      livestock = list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), storage = 'Tank_1')
 #' }
-save_template <- function(file, livestock = list(), storage = NULL, token = Sys.getenv('AGRAMMON_TOKEN')) {
+save_template <- function(file, livestock = list(), storage = NULL, token = NULL) {
     # check token
-    if (!is.character(token) || token == '') {
-        stop('not agrammon token available')
-    }
+    token <- check_token(token)
     # get template
     out <- create_template(livestock, storage, token)
     # proceed only if out != null
