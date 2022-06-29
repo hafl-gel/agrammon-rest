@@ -361,7 +361,7 @@ save_template <- function(file, livestock = list(), storage = NULL, token = Sys.
     # proceed only if out != null
     if (!is.null(out)) {
         # write to file
-        fwrite(out, file, sep = ';')
+        fwrite(out, file, sep = ';', quote = FALSE)
     }
     # return null
     invisible()
