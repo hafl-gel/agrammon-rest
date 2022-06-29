@@ -1,7 +1,6 @@
 
 # TODO:
 #   - don't export agrammon_options, run_model, ...
-#   - function save to excel
 
 #' title
 #'
@@ -286,6 +285,30 @@ wide_output <- function(x) {
     out[]
 }
 
+#' title
+#'
+#' description
+#'
+#' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
+#' @return  result from an Agrammon model run
+#' @export
+#' @examples
+#' ## examples here
+save_excel <- function(x, file, wide_format = FALSE, asTable = TRUE) {
+    if (!require(openxlsx)) {
+        stop('package "openxlsx" is not available!\n\n', 
+            '    install.packages("openxlsx")\n\n')
+    }
+    # check if data.table/.frame
+    if (!is.data.frame(x)) {
+        stop('argument "x" must be an object of class data.frame or data.table')
+    }
+    # wide format?
+    if (wide_format) {
+        x <- wide_output(x)
+    }
+    write.xlsx(x, file, asTable = asTable, overwrite = TRUE)
+}
 
 
 # check input file
@@ -655,18 +678,20 @@ check_and_validate <- function(dt) {
 }
 
 
-#' title
+#' Agrammon options
 #'
-#' description
+#' return a list of valid Agrammon REST interface options
 #'
-#' @param 
-#' @return  
-#' @export
+#' @param show logical. If \code{TRUE} an explanatory summary on the 
+#'          options that can be edited will be printed to the console. 
+#'          Defaults to \code{FALSE}.
+#' @param \dots agrammon REST interface options
+#' @return a list of agrammon REST interface options
 #' @examples
 #' ## examples here
 #' agrammon_options(show = TRUE)
 #' agrammon_options(language = 'de', print = c('LivestockNH3', 'LivestockTAN'))
-agrammon_options <- function(..., show = FALSE) {
+agrammon_options <- function(show = FALSE, ...) {
     # assign defaults
     defaults <- list(
         # can be changed:
