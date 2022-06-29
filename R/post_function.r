@@ -454,9 +454,9 @@ check_report <- function(report) {
 # helper
 check_token <- function(token) {
     if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
-        stop('no agrammon token available')
+        stop('no token available')
     } else if (!is.character(token) || token == '') {
-        stop('input to argument "token" cannot be valid')
+        stop('token not valid')
     }
     token
 }
