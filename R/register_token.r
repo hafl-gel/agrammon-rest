@@ -16,15 +16,18 @@
 #' 
 #' You can request a personal access token at support@agrammon.ch
 #'
-#' @references
-#' https://github.com/oposs/agrammon, 
-#'
-#' @seealso
-#' https://github.com/oposs/agrammon, link to agrammon REST interface docu
+#' @seealso [save_template()], [run_agrammon()]
 #'
 #' @param token Agrammon REST-API access token.
 #' @param permanent ...
 #' @export
+#' @examples
+#' \dontrun{
+#'   # register token permanently
+#'   register_token(my_token)
+#'   # register token for current session only
+#'   register_token(my_token, permanent = FALSE)
+#' }
 register_token <- function(token, permanent = TRUE) {
     # check arguments
     if (missing(token)) stop('argument "token" missing')
