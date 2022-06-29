@@ -7,7 +7,7 @@
 #' @examples
 #' mj <- get_input_template()
 get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
-    sort = c('model', 'calculation')[1], token = Sys.getenv('AGRAMMON_TOKEN')) {
+    sort = c('model', 'calculation')[1], token = NULL) {
     # check if curl is installed
     if (!require('curl')) {
         stop('package "curl" is not available!\n\n', 
@@ -22,9 +22,7 @@ get_input_template <- function(format = c('json', 'csv', 'text')[1], language = 
     # set request option to get:
     curl::handle_setopt(hdl, customrequest = 'GET')
     # check token
-    if (!is.character(token) || token == '') {
-        stop('not agrammon token available')
-    }
+    token <- check_token(token)
     # add header part
     curl::handle_setheaders(hdl,
         'Content-Type' = 'multipart/form-data',
@@ -147,7 +145,7 @@ read_input_vars <- function(x, language = 'de', module = '') {
 #'create_template(list('test2a', dairy_cows = 'b'))
 #'create_template(list(dc = 'test2b', dairy_cows = 'b'))
 #'create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
-create_template <- function(livestock = list(), storage = NULL, token = Sys.getenv('AGRAMMON_TOKEN')) {
+create_template <- function(livestock = list(), storage = NULL, token = NULL) {
     dump_all <- FALSE
     # check livestock
     if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
@@ -187,9 +185,7 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
         }
     }
     # check token
-    if (!is.character(token) || token == '') {
-        stop('not agrammon token available')
-    }
+    token <- check_token(token)
     # get input dump
     inp_var <- read_input_vars(get_input_template(token = token))
     # check names of livestock
