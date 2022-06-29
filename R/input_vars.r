@@ -332,11 +332,24 @@ create_template <- function(livestock = list(), storage = NULL, token = Sys.gete
 #' save a csv file which can be used as template for model input
 #'
 #' @details
-#' If argument \code{livestock} is \code{TRUE} ...
-#' If \code{livestock} is a named list ...
-#' If \code{livestock} is an empty list (default) ...
+#' If \code{livestock} is an empty list (default), all available animal
+#' categories including their parent classes are printed to the console.
+#'
+#' If argument \code{livestock} is \code{TRUE}, entries for all available
+#' parent classes will be written to the template file \code{file}.
+#'
+#' If \code{livestock} is a named list, all defined instances in the list will be
+#' written to the template file |code{file}. The list entry names must
+#' correspond to a valid animal category or parent class whereas the list entries
+#' (character vectors) will provide the instance names of the corresponding animal
+#' category (or parent class).
+#'
+#' If \code{storage} is NULL, the first line of the template will contain a warning.
+#'
 #' A valid \code{token} can be required from support@agrammon.ch
 #'
+#' @seealso [register_token()] for registering your personal access token, [run_agrammon()]
+#' for calling the Agrammon model with a valid input data set.
 #' @param file file path
 #' @param livestock a named list or \code{TRUE}. The default is an empty list. See Details.
 #' @param storage a character vector providing storage instance names (slurry tanks)
