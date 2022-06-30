@@ -244,7 +244,6 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
 #'
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
-#' @export
 #' @examples
 #' ## examples here
 #' wide_output(res)
