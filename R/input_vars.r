@@ -359,10 +359,8 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #'      storage = 'Tank_1')
 #' }
 save_template <- function(file, livestock = list(), storage = NULL, token = NULL) {
-    # check token
-    token <- check_token(token)
     # get template
-    out <- create_template(livestock, storage, token)
+    out <- create_template(livestock, storage, check_token(token))
     # proceed only if out != null
     if (!is.null(out)) {
         # write to file

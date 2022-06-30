@@ -96,10 +96,8 @@ run_agrammon <- function(input_file,
                 c('print-only', 'include-filters', 'all-filters', 'language'))]
         )
     )
-    # token
-    token <- check_token(token)
     # run model
-    run_model(input_file, model_options, token)
+    run_model(input_file, model_options, check_token(token))
 }
 
 #' title
@@ -140,7 +138,7 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # read input file
     raw_input <- fread(file = input_file, showProgress = FALSE)
     # validate input
-    valid_data <- check_and_validate(raw_input)
+    valid_data <- check_and_validate(raw_input, token = token)
     # help user
     message('ok')
     # print input (be verbose)
@@ -471,9 +469,9 @@ check_token <- function(token) {
 #'
 #' @param dt a \code{data.table} of Agrammon input data
 #' @return a list with entries 'input data', 'farm_id column', 'simulation column'
-check_and_validate <- function(dt) {
+check_and_validate <- function(dt, token = NULL) {
     # read input vars
-    temp <- create_template(TRUE)
+    temp <- create_template(TRUE, token = token)
     # remove Note: and NA rows???
     temp <- temp[!is.na(module)][!grepl('Note:', module, fixed = TRUE)]
     # has instance?
