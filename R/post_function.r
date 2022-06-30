@@ -99,7 +99,6 @@ run_agrammon <- function(input_file,
 #'
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
-#' @export
 #' @examples
 #' ## examples here
 #' run_model('./tests/inputs-version6-rest.csv')
