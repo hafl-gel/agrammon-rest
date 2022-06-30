@@ -700,10 +700,8 @@ agrammon_options <- function(show = FALSE, ...) {
                 values = c('en', 'de', 'fr')
                 ),
             'print-only' = list(
-                help = paste0('output subset(s) to return\n',
-                    '    option "print-only" has preceedence over "report-selected"\n',
-                    '    if neither "print-only" nor "report-selected" are set, \n',
-                    '     all available model output will be returned'),
+                help = paste0('output subset to return\n',
+                    '     (default "": return full model output)'),
                 values = c('', 
                     'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
                     'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
@@ -711,17 +709,6 @@ agrammon_options <- function(show = FALSE, ...) {
                     'LivestockNtot', 'LivestockTAN',
                     'LivestockN2', 'LivestockNO', 'LivestockN2O'
                 )
-            ),
-            'report-selected' = list(
-                help = paste0('output report(s) to return\n',
-                    '    option "print-only" has preceedence over "report-selected"\n',
-                    '    if neither "print-only" nor "report-selected" are set, \n',
-                    '     all available model output will be returned\n',
-                    '    Reports "DetailReport", "DetailReportTAN", "DetailReportN" and "HAFLReport"\n',
-                    '    are not available in variants == "Kantonal_LU"'),
-                values = c('',
-                    'Summary', 'DetailReport', 'DetailReportNH3', 'DetailReportTAN',
-                    'DetailReportN', 'HAFLReport')
             ),
             'include-filters' = list(
                 help = 'show each animal category seperately?',
