@@ -4,21 +4,36 @@
 #   - add vignette (incl. data set)
 # # TODO: check all cases!!!
 
-#' title
+#' Run Agrammon
 #'
-#' description
+#' run the Agrammon model via its REST interface.
 #'
-#' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
-#' @return  result from an Agrammon model run
+#' @param input_file path to CSV file containing model input data
+#' @param report string defining the content of the returned model result. 
+#' Partial matching of argument.
+#' @param filter string defining the detail of splitting up the result by animal category.
+#' Partial matching of argument.
+#' @param language language for the units in the model result. Defaults to English ('en')
+#' @param data.table logical. should the result be returned as \code{data.table} 
+#' (\code{TRUE}; default) or \code{data.frame} (\code{FALSE}).
+#' @param token Agrammon REST-API access token.
+#' @return result from an Agrammon model run
 #' @export
 #' @examples
 #' ## examples here
-#' run_agrammon('./tests/inputs-version6-rest.csv')
-#' run_agrammon('./tests/inputs-version6-rest.csv', report = 'NH3', filter = 'ex')
+#' # path to example input data set
+#' path_example <- system.file('extdata', 'example_data_set_3farms.csv',
+#'   package = 'agrammon')
+#' # return default report
+#' run_agrammon(path_example)
+#' # return report on NH3 losses and split up the result by all 
+#' # animal categories that exist in the input data set
+#' run_agrammon(path_example, report = 'NH3', filter = 'ex')
 run_agrammon <- function(input_file, 
     report = c('summary', 'detailed', 'full', 'NH3', 'TAN', 'N', 'HAFL')[1],
     filter = c('total_only', 'existing_categories', 'all_categories')[1], 
-    language = c('en', 'de', 'fr')[1], token = NULL, ...) {
+    language = c('en', 'de', 'fr')[1], 
+    data.table = getOption('agrammon.datatable', TRUE), token = NULL, ...) {
     # check input_file
     if (!is.character(input_file)) {
         stop('argument "input_file" must be of type character')
