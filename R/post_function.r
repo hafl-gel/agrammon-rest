@@ -703,14 +703,28 @@ agrammon_options <- function(show = FALSE, ...) {
                 values = c('en', 'de', 'fr')
                 ),
             'print-only' = list(
-                help = 'output subset(s) to return\n    ("" == full model output)',
+                help = paste0('output subset(s) to return\n',
+                    '    option "print-only" has preceedence over "report-selected"\n',
+                    '    if neither "print-only" nor "report-selected" are set, \n',
+                    '     all available model output will be returned'),
                 values = c('', 
-                'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
-                'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
-                'LivestockNH3', 'PlantNH3',
-                'LivestockNtot', 'LivestockTAN',
-                'LivestockN2', 'LivestockNO', 'LivestockN2O'
+                    'SummaryTotal', 'SummaryLivestock', 'SummaryPlantProduction',
+                    'ResultsTotal', 'ResultsLivestock', 'ResultsPlantProduction',
+                    'LivestockNH3', 'PlantNH3',
+                    'LivestockNtot', 'LivestockTAN',
+                    'LivestockN2', 'LivestockNO', 'LivestockN2O'
                 )
+            ),
+            'report-selected' = list(
+                help = paste0('output report(s) to return\n',
+                    '    option "print-only" has preceedence over "report-selected"\n',
+                    '    if neither "print-only" nor "report-selected" are set, \n',
+                    '     all available model output will be returned\n',
+                    '    Reports "DetailReport", "DetailReportTAN", "DetailReportN" and "HAFLReport"\n',
+                    '    are not available in variants == "Kantonal_LU"'),
+                values = c('',
+                    'Summary', 'DetailReport', 'DetailReportNH3', 'DetailReportTAN',
+                    'DetailReportN', 'HAFLReport')
             ),
             'include-filters' = list(
                 help = 'show each animal category seperately?',
@@ -740,7 +754,7 @@ agrammon_options <- function(show = FALSE, ...) {
         for (lnms in names(defaults[['free']])) {
             cat(lnms, ':\n    ', sep = '')
             cat(defaults[['free']][[lnms]][['help']], '\n    ')
-            cat('options:\n', sp(7), '*"', 
+            cat('valid entries:\n', sp(7), '*"', 
                 paste0(defaults[['free']][[lnms]][['values']], 
                     collapse = paste0('"\n', sp(8), '"')), 
                 '"\n', sep = '')
@@ -755,7 +769,7 @@ agrammon_options <- function(show = FALSE, ...) {
     # get dots
     dots <- list(...)
     # define option names to loop over
-    loop_options <- names(default[['free']])
+    loop_options <- names(defaults[['free']])
     # add hidden option to change fixed
     if (isTRUE(dots[['change_fixed']])) {
         loop_options <- c(loop_options, names(defaults[['fixed']]))
