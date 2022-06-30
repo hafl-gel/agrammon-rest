@@ -32,7 +32,20 @@ library(agrammon)
 - store result
     - save result to Excel file
 
+## Agrammon REST API
+
+- explain rest
+- explain package workflow
+- access token
+
 ## Input Data Set
+
+- create template
+- load example data set? and show instances etc.?
 
 ## Run Agrammon
 
+- run different example data sets
+    - 3 farms ok
+    - 1 farm without farm id?
+    - ...
