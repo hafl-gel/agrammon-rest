@@ -45,6 +45,13 @@ run_agrammon <- function(input_file,
         }
         # remove duplicates
         print_only <- unique(print_only)
+    } else if ('report-selected' %in% names(dots)) {
+        # check report
+        if (!missing(report)) {
+            stop('Either provide argument "report" or agrammon option "report-selected"')
+        }
+        # set print-only to ''
+        print_only <- ''
     } else {
         # check report
         print_only <- check_report(report)
