@@ -20,7 +20,16 @@ library(agrammon)
 
 # Title
 
-## Workflow
+link to Agrammon REST API: https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml
+
+## Introduction
+
+This package supports users in using the n-flow(?) model Agrammon (link!) via its REST API interface with the help of R.
+It provides 4 functions (list here..) that facilitate
+- storing the access token (should it?) (register_token)
+- generating a valid data set (a CSV file) containing all necessary input data (save_template)
+- running Agrammon via its REST interface (run_agrammon)
+- saving results as excel file (save_excel)
 
 - prepare input data set (CSV file)
     - save template
