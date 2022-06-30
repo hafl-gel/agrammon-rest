@@ -754,8 +754,14 @@ agrammon_options <- function(show = FALSE, ...) {
         )
     # get dots
     dots <- list(...)
+    # define option names to loop over
+    loop_options <- names(default[['free']])
+    # add hidden option to change fixed
+    if (isTRUE(dots[['change_fixed']])) {
+        loop_options <- c(loop_options, names(defaults[['fixed']]))
+    }
     # loop over free options
-    for (fnms in names(defaults[['free']])) {
+    for (fnms in loop_options) {
         if (fnms %in% names(dots)) {
             if (fnms == 'print-only' & length(dots[[fnms]]) > 1) {
                 # check for empty string
