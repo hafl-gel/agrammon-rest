@@ -20,39 +20,49 @@ library(agrammon)
 
 # Title
 
-link to Agrammon REST API: https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml
-
 ## Introduction
 
-This package supports users in using the n-flow(?) model Agrammon (link!) via its REST API interface with the help of R.
-It provides 4 functions (list here..) that facilitate
-- storing the access token (should it?) (register_token)
-- generating a valid data set (a CSV file) containing all necessary input data (save_template)
-- running Agrammon via its REST interface (run_agrammon)
-- saving results as excel file (save_excel)
+This package facilitate using the n-flow(?) model Agrammon (link!) via its REST API interface with the help of R.  
 
-- prepare input data set (CSV file)
-    - save template
-- call model
-    - check input data set
-    - print data set summary
-    - call Agrammon via REST interface
-    - check result
-- store result
-    - save result to Excel file
+The `agrammon` package provides 4 functions that let the user
 
-## Agrammon REST API
+- `register_token()`: store and re-use the personal access token (section [Agrammon REST API](#rest))
+- `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input))
+- `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run))
+- `save_excel()`: save results as excel file (end of section [Run Agrammon](#run))
+
+The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
+To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary input), 
+the function `save_template()` will save a CSV template file with all necessary input variables including their 
+default values (if the variable has a default) as well as a remark on the accepted input value (if there are any restrictions). 
+See section [Input Data Set](#input) for further explanation and examples on the input data file.  
+
+`run_agrammon()` will act as follows:
+
+1. read in the input data set from the provided file path
+2. check the input data set for missing data and validate its values
+3. print a data set summary to the console
+4. call Agrammon via its REST interface
+5. receive and check the model result
+6. return the result as either a `data.frame` or a `data.table` (default)
+
+The user can then process the results in R or save them as an EXCEL file by using `save_excel()`.
+
+## Agrammon REST API {#rest}
 
 - explain rest
+
+link to Agrammon REST API: https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml
 - explain package workflow
 - access token
 
-## Input Data Set
+## Input Data Set {#input}
 
-- create template
+- save template
+- explain default vs mandatory variables
 - load example data set? and show instances etc.?
 
-## Run Agrammon
+## Run Agrammon {#run}
 
 - run different example data sets
     - 3 farms ok
