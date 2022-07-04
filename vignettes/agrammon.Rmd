@@ -14,19 +14,17 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(agrammon)
-```
-
 # Package agrammon
 
 ## Introduction
 
-This package facilitate using the n-flow(?) model Agrammon (link!) via its REST API interface with the help of R.  
+This package facilitates using the Nitrogen flow model Agrammon (www.agrammon.ch) via its REST API interface with the help of R.
+The communication between the R session and the Agrammon model is possible via Agrammon's REST API ([Wikipedia: REST interface](https://en.wikipedia.org/wiki/Representational_state_transfer)
+and [Agrammon REST API](https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml).)
 
 The `agrammon` package provides 4 functions that let the user
 
-- `register_token()`: store and re-use the personal access token (section [Agrammon REST API](#rest))
+- `register_token()`: store and re-use the personal access token (section [Access Token](#token))
 - `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input))
 - `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run))
 - `save_excel()`: save results as excel file (end of section [Run Agrammon](#run))
@@ -48,10 +46,7 @@ See section [Input Data Set](#input) for further explanation and examples on the
 
 The user can process the results in the current R session or save them as an EXCEL file using `save_excel()`.
 
-## Agrammon REST API {#rest}
-
-The communication between the R session and the Agrammon model is possible via Agrammon's REST API (see [Wikipedia: REST interface](https://en.wikipedia.org/wiki/Representational_state_transfer)
-and [Agrammon REST API](https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml).)
+## Access Token {#token}
 
 A personal access token (a string representing the user API key) is required to communicate by the Agrammon REST interface.
 This access token can be requested at support@agrammon.ch.
@@ -77,7 +72,7 @@ Optional input variable contain an entry in column 'default' in the template. Re
 A template file with _all_ possible input variables (i.e. not limited to specific animal categories) can be written by
 setting the argument `livestock` to `TRUE`:
 
-```{r template-all}
+```{r template-all, eval = FALSE}
 # all categories
 save_template('template_all.csv', TRUE)
 ```
@@ -86,7 +81,7 @@ save_template('template_all.csv', TRUE)
 
 The user can provide specific animal categories or their parent classes to restrict the template content to these categories:
 
-```{r template-user}
+```{r template-user, eval = FALSE}
 # specific categories/classes
 save_template('template_user.csv', list(RoughageConsuming = c('bisons', 'alpaca'), 
         wapiti = 'wapiti', dairy_cows = 'DC'), storage = 'tank 1')
@@ -118,7 +113,7 @@ With the path to the input data set file, the model can be run with the `run_agr
 The content of the returned model result can be limited to contain specific result reports. At the moment,
 the following reports can be specified with argument `report`:
 
-| `report` argument | contains |
+| argument `report` | model reporting |
 |:---|:---|
 | `"summary"` | Short summary on the "top-level" NH3 emissions |
 | `"detailed"` | Summary on the "top-level" NH3 and other gaseous N emissions, as well as on the total N and TAN flow |
@@ -128,7 +123,7 @@ the following reports can be specified with argument `report`:
 | `"HAFL"` | Report used in teaching classes |
 | `"full"` | Full (!) set of model results |
 
-```{r run-report}
+```{r run-report, eval = FALSE}
 # path to example data set
 path_ex <- system.file('inst/extdata', 'example_data_set_3farms.csv', package = 'agrammon')
 # run model with default summary report:
@@ -141,7 +136,7 @@ run_agrammon(path_ex, report = 'det')
 
 It is possible to "filter" the model results, i.e. attribute them to the different animal categories:
 
-```{r run-filter}
+```{r run-filter, eval = FALSE}
 # path to example data set
 path_ex <- system.file('inst/extdata', 'example_data_set_3farms.csv', package = 'agrammon')
 # default summary report incl. filter by all available categories (even if they don't exist
