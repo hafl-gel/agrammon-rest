@@ -460,7 +460,12 @@ check_report <- function(report) {
     valid[[report]]
 }
 
-# helper
+#' Check Agrammon Access Token
+#'
+#' check and return a valid Agrammon access token
+#'
+#' @param token valid access token string of \code{NULL}
+#' @return a valid access token string
 check_token <- function(token) {
     if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
         stop('no token available')
@@ -691,7 +696,7 @@ check_and_validate <- function(dt, token = NULL) {
 }
 
 
-#' Agrammon options
+#' Agrammon Options
 #'
 #' return a list of valid Agrammon REST interface options
 #'

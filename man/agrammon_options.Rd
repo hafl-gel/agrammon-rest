@@ -2,7 +2,7 @@
 % Please edit documentation in R/post_function.r
 \name{agrammon_options}
 \alias{agrammon_options}
-\title{Agrammon options}
+\title{Agrammon Options}
 \usage{
 agrammon_options(show = FALSE, ...)
 }

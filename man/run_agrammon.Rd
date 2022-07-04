@@ -2,28 +2,48 @@
 % Please edit documentation in R/post_function.r
 \name{run_agrammon}
 \alias{run_agrammon}
-\title{title}
+\title{Run Agrammon}
 \usage{
 run_agrammon(
   input_file,
   report = c("summary", "detailed", "full", "NH3", "TAN", "N", "HAFL")[1],
   filter = c("total_only", "existing_categories", "all_categories")[1],
   language = c("en", "de", "fr")[1],
+  data.table = getOption("agrammon.datatable", TRUE),
   token = NULL,
   ...
 )
 }
 \arguments{
-\item{token}{Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'}
+\item{input_file}{path to CSV file containing model input data}
+
+\item{report}{string defining the content of the returned model result. 
+Partial matching of argument.}
+
+\item{filter}{string defining the detail of splitting up the result by animal category.
+Partial matching of argument.}
+
+\item{language}{language for the units in the model result. Defaults to English ('en')}
+
+\item{data.table}{logical. should the result be returned as \code{data.table} 
+(\code{TRUE}; default) or \code{data.frame} (\code{FALSE}).}
+
+\item{token}{Agrammon REST-API access token.}
 }
 \value{
 result from an Agrammon model run
 }
 \description{
-description
+run the Agrammon model via its REST interface.
 }
 \examples{
 ## examples here
-run_agrammon('./tests/inputs-version6-rest.csv')
-run_agrammon('./tests/inputs-version6-rest.csv', report = 'NH3', filter = 'ex')
+# path to example input data set
+path_example <- system.file('extdata', 'example_data_set_3farms.csv',
+  package = 'agrammon')
+# return default report
+run_agrammon(path_example)
+# return report on NH3 losses and split up the result by all 
+# animal categories that exist in the input data set
+run_agrammon(path_example, report = 'NH3', filter = 'ex')
 }
