@@ -47,6 +47,15 @@ See section [Input Data Set](#input) for further explanation and examples on the
 
 The user can process the results in the current R session or save them as an EXCEL file using `save_excel()`.
 
+## Installation
+
+The package can be installed from GitHub. Use `build_vignettes = TRUE` if you want this vignette 
+available locally:
+
+```{r install, eval = FALSE}
+devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
+```
+
 ## Access Token {#token}
 
 A personal access token (a string representing the user API key) is required to communicate by the Agrammon REST interface.
