@@ -29,16 +29,16 @@ and [Agrammon REST API](https://redocly.github.io/redoc/?url=https://model.agram
 
 The `agrammon` package provides 4 functions that let the user
 
-- `register_token()`: store and re-use the personal access token (section [Access Token])
-- `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set])
-- `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon])
-- `save_excel()`: save results as excel file (end of section [Run Agrammon])
+- `register_token()`: store and re-use the personal access token (section [Access Token](#access-token))
+- `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input-data-set))
+- `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run-agrammon))
+- `save_excel()`: save results as excel file (end of section [Run Agrammon](#run-agrammon))
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
 To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary input), 
 the function `save_template()` will save a CSV template file with all necessary input variables including their 
 default values (if the variable has a default) as well as a remark on the accepted input value (if there are any restrictions). 
-See section [Input Data Set](#input) for further explanation and examples on the input data file.  
+See section [Input Data Set](#input-data-set) for further explanation and examples on the input data file.  
 
 `run_agrammon()` will act as follows:
 
