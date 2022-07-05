@@ -11,7 +11,7 @@
 #' @param input_file path to CSV file containing model input data
 #' @param report string defining the content of the returned model result. 
 #' Partial matching of argument.
-#' @param filter string defining the detail of splitting up the result by animal category.
+#' @param filter string defining the detail to which the result is split up by animal category.
 #' Partial matching of argument.
 #' @param language language for the units in the model result. Defaults to English ('en')
 #' @param data.table logical. should the result be returned as \code{data.table} 

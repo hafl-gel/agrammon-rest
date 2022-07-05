@@ -37,28 +37,28 @@ The `agrammon` package provides 4 functions that let the user
 - `register_token()`: store and re-use the personal access token (section [Access Token](#access-token))
 - `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input-data-set))
 - `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run-agrammon))
-- `save_excel()`: save results as excel file (end of section [Run Agrammon](#run-agrammon))
+- `save_excel()`: save results as an excel file (end of section [Run Agrammon](#run-agrammon))
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
-To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary input), 
+To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary inputs), 
 the function `save_template()` will save a CSV template file with all necessary input variables including their 
-default values (if the variable has a default) as well as a remark on the accepted input value (if there are any restrictions). 
+default values (if the variable has a default) as well as a remark on the accepted input values (if there are any restrictions). 
 See section [Input Data Set](#input-data-set) for further explanation and examples on the input data file.  
 
 `run_agrammon()` will act as follows:
 
 1. read in the input data set from the provided file path
 2. check the input data set for missing data and validate its values
-3. print a summary of the input data set to the console
+3. print a summary of the input data set in the console
 4. upload the input data set to the Agrammon server and run Agrammon on the server
-5. receive back and check the model result
-6. return the result as either a `data.frame` or a `data.table` (default)
+5. receive and check the model results
+6. return the results as either a `data.frame` or a `data.table` (default)
 
 The user can process the results in the current R session or save them as an EXCEL file using `save_excel()`.
 
 ## Access Token
 
-A personal access token (a string representing the user API key) is required to communicate by the Agrammon REST interface.
+A personal access token (i.e., a string representing the user API key) is required to communicate with the Agrammon REST interface.
 This access token can be requested at support@agrammon.ch.
 
 The access token can be registered either for the current R session or permanently (in the `.Renviron` file in the user's home 
@@ -72,9 +72,9 @@ be added to the existing `.Renviron` file.
 
 Most of the Agrammon input variables are mandatory and must contain valid entries, only few input variables are optional and will 
 fall back on a predefined default. The function `save_template()` writes an input template file that can be used as guidance.
-**The template file column separator is a semicolon (not comma)!**
+**The template file column separator is a semicolon (not a comma)!**
 
-Optional input variable contain an entry in column 'default' in the template. Remarks on valid input (numeric bounds, list of valid entries, etc.) is indicated in column
+Optional input variables contain an entry in the column 'default' in the template. Remarks on valid inputs (numeric bounds, list of valid entries, etc.) are indicated in column
 'remarks' in the template.
 
 ### Template - no categories specified
@@ -107,11 +107,11 @@ path_ex <- system.file('extdata', 'example_data_set_3farms.csv', package = 'agra
 fread(path_ex)
 ```
 
-The first column is optional and contains the simulation label. The second column is the farm label/id and is (obviously) mandatory if 
+The first column is optional and contains the simulation label. The second column is the farm label/id and is mandatory if 
 the user specifies input for more than one farm. 
 
-The order of the columns is irrelevant since the package tries its best to guess/find and assign the correct columns to the correct
-input. However, if you encounter issues that might be related to false column assignment, please report this back as an issue on GitHub (link here!).
+The order of the columns is irrelevant since the package tries to find and assign the correct columns to the correct
+inputs. However, if you encounter issues that might be related to false column assignment, please report this back as an issue on GitHub (link here!).
 
 
 ## Run Agrammon

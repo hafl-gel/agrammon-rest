@@ -332,13 +332,13 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #'
 #' If \code{livestock} is a named list, all defined instances in the list will be
 #' written to the template file |code{file}. The list entry names must
-#' correspond to a valid animal category or parent class whereas the list entries
+#' correspond to a valid animal category or parent class, whereas the list entries
 #' (character vectors) will provide the instance names of the corresponding animal
 #' category (or parent class) (see Examples).
 #'
 #' If \code{storage} is NULL, the first line of the template will contain a warning.
 #'
-#' A valid \code{token} can be required from support@agrammon.ch
+#' A valid \code{token} can be requested from support@agrammon.ch
 #'
 #' @seealso [register_token()] for registering your personal access token, [run_agrammon()]
 #' for calling the Agrammon model with a valid input data set.
