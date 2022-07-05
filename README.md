@@ -9,7 +9,17 @@ vignette: >
 
 
 
-# Package agrammon
+# R Package agrammon
+
+## Installation
+
+The package can be installed from GitHub. Use `build_vignettes = TRUE` if you want this vignette 
+available locally:
+
+
+```r
+devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
+```
 
 ## Introduction
 
@@ -19,10 +29,10 @@ and [Agrammon REST API](https://redocly.github.io/redoc/?url=https://model.agram
 
 The `agrammon` package provides 4 functions that let the user
 
-- `register_token()`: store and re-use the personal access token (section [Access Token](#token))
-- `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input))
-- `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run))
-- `save_excel()`: save results as excel file (end of section [Run Agrammon](#run))
+- `register_token()`: store and re-use the personal access token (section [Access Token])
+- `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set])
+- `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon])
+- `save_excel()`: save results as excel file (end of section [Run Agrammon])
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
 To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary input), 
@@ -41,17 +51,7 @@ See section [Input Data Set](#input) for further explanation and examples on the
 
 The user can process the results in the current R session or save them as an EXCEL file using `save_excel()`.
 
-## Installation
-
-The package can be installed from GitHub. Use `build_vignettes = TRUE` if you want this vignette 
-available locally:
-
-
-```r
-devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
-```
-
-## Access Token {#token}
+## Access Token
 
 A personal access token (a string representing the user API key) is required to communicate by the Agrammon REST interface.
 This access token can be requested at support@agrammon.ch.
@@ -61,7 +61,7 @@ directory (`Sys.getenv("HOME")`)) using the function `register_token()`.
 If the file `.Renviron` does not exist in the user home directory a new file will be created, otherwise a line containing the token will
 be added to the existing `.Renviron` file.
 
-## Input Data Set {#input}
+## Input Data Set
 
 ### Valid Input Data
 
@@ -124,7 +124,7 @@ The order of the columns is irrelevant since the package tries its best to guess
 input. However, if you encounter issues that might be related to false column assignment, please report this back as an issue on GitHub (link here!).
 
 
-## Run Agrammon {#run}
+## Run Agrammon
 
 With the path to the input data set file, the model can be run with the `run_agrammon()` function.
 
