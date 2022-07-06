@@ -387,7 +387,15 @@ save_template <- function(file, livestock = list(), storage = NULL,
             }
         }
         # write to file
-        fwrite(out, file, sep = primary, quote = FALSE)
+        if (language[1] != 'en' && .Platform[['OS.type']] == 'windows') {
+            # fix encoding for extended latin characters
+            enc <- "latin1"
+            f <- file(file, open = 'w', encoding = enc)
+            write.table(out, f, sep = primary, quote = FALSE, fileEncoding = enc)
+            close(f)
+        } else {
+            fwrite(out, file, sep = primary, quote = FALSE)
+        }
     }
     # return null
     invisible()
