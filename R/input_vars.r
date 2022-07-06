@@ -363,8 +363,26 @@ save_template <- function(file, livestock = list(), storage = NULL, token = NULL
     out <- create_template(livestock, storage, check_token(token))
     # proceed only if out != null
     if (!is.null(out)) {
+        # replace secondary separator in columns remark & help
+        out[grep(',', remarks, fixed = TRUE), c('remarks', 'help') := 
+            lapply(.SD, gsub, pattern = ',', replacement = ' / ', 
+                fixed = TRUE), 
+            .SDcols = c('remarks', 'help')]
+        # set default primary separator
+        primary <- ','
+        # check list separator on Windows
+        if (.Platform[['OS.type']] == 'windows') {
+            # get registry entry
+            sList <- try(system('reg query "HKEY_CURRENT_USER\\Control Panel\\International" /v sList', intern = TRUE))
+            if (!inherits(sList, 'try-error')) {
+                # get entry
+                sep_line <- grep('sList', sList, fixed = TRUE, value = TRUE)
+                # extract last char
+                primary <- sub('.* (\\S)$', '\\1', sep_line)
+            }
+        }
         # write to file
-        fwrite(out, file, sep = ';', quote = FALSE)
+        fwrite(out, file, sep = primary, quote = FALSE)
     }
     # return null
     invisible()

@@ -23,7 +23,7 @@ Partial matching of argument.}
 \item{filter}{string defining the detail with which the result is split up by animal category.
 Partial matching of argument.}
 
-\item{language}{language for the units of the model result. Default is English ('en')}
+\item{language}{language for the units in the model result. Defaults to English ('en')}
 
 \item{data.table}{logical. should the result be returned as \code{data.table} 
 (\code{TRUE}; default) or \code{data.frame} (\code{FALSE}).}
