@@ -1,2 +1,5 @@
+v1.0.2
+  - Add option to choose help language for template file
+  - Fix extended latin character to open template in Excel
 v1.0.1
   - Windows specific change: Adapt template column separator (CSV file) to match locales
