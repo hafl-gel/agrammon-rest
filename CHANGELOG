@@ -1,0 +1,2 @@
+v1.0.1
+  - Windows specific change: Adapt template column separator (CSV file) to match locales
