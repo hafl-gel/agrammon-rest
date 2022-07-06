@@ -85,6 +85,9 @@ setting the argument `livestock` to `TRUE`:
 ```{r template-all, eval = FALSE}
 # all categories
 save_template('template_all.csv', TRUE)
+
+# template on all categories with german help text
+save_template('template_all_de.csv', TRUE, language = 'de')
 ```
 
 ### Template - user defined categories
