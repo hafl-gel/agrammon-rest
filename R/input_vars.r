@@ -143,7 +143,8 @@ read_input_vars <- function(x, language = 'en', module = '') {
 #'create_template(list('test2a', dairy_cows = 'b'))
 #'create_template(list(dc = 'test2b', dairy_cows = 'b'))
 #'create_template(list(dc = 'test2b', bc = 'a', dairy_cows = 'b'))
-create_template <- function(livestock = list(), storage = NULL, token = NULL) {
+create_template <- function(livestock = list(), storage = NULL, 
+    language = c('en', 'de', 'fr')[1], token = NULL) {
     dump_all <- FALSE
     # check livestock
     if (!is.list(livestock) && !(dump_all <- is.logical(livestock) && livestock)) {
@@ -183,7 +184,8 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
         }
     }
     # get input dump
-    inp_var <- read_input_vars(get_input_template(token = token))
+    inp_var <- read_input_vars(get_input_template(language = language[1], token = token), 
+        language = language[1])
     # check names of livestock
     liv <- inp_var[top_module %in% 'Livestock'][variable %in% 'animalcategory'][order(animal_cat)]
     animal_cats <- liv[, c(unlist(enums), animal_cat)]
@@ -345,6 +347,8 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #' @param file file path
 #' @param livestock a named list or \code{TRUE}. The default is an empty list. See Details.
 #' @param storage a character vector providing storage instance names (slurry tanks)
+#' @param language the language that is used to provide help on input variables. Defaults to 
+#' \code{'en'}.
 #' @param token token which will be used to perform the REST call.
 #' @export
 #' @return NULL
@@ -358,9 +362,10 @@ create_template <- function(livestock = list(), storage = NULL, token = NULL) {
 #'      list(Equides = c('Horses_1', 'Horses_2'), dairy_cows = 'DC'), 
 #'      storage = 'Tank_1')
 #' }
-save_template <- function(file, livestock = list(), storage = NULL, token = NULL) {
+save_template <- function(file, livestock = list(), storage = NULL, 
+    language = c('en', 'de', 'fr')[1], token = NULL) {
     # get template
-    out <- create_template(livestock, storage, check_token(token))
+    out <- create_template(livestock, storage, language[1], check_token(token))
     # proceed only if out != null
     if (!is.null(out)) {
         # replace secondary separator in columns remark & help

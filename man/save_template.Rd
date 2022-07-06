@@ -4,7 +4,13 @@
 \alias{save_template}
 \title{save template to file}
 \usage{
-save_template(file, livestock = list(), storage = NULL, token = NULL)
+save_template(
+  file,
+  livestock = list(),
+  storage = NULL,
+  language = c("en", "de", "fr")[1],
+  token = NULL
+)
 }
 \arguments{
 \item{file}{file path}
@@ -12,6 +18,9 @@ save_template(file, livestock = list(), storage = NULL, token = NULL)
 \item{livestock}{a named list or \code{TRUE}. The default is an empty list. See Details.}
 
 \item{storage}{a character vector providing storage instance names (slurry tanks)}
+
+\item{language}{the language that is used to provide help on input variables. Defaults to 
+\code{'en'}.}
 
 \item{token}{token which will be used to perform the REST call.}
 }

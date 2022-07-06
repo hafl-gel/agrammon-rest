@@ -4,7 +4,12 @@
 \alias{create_template}
 \title{create template in R}
 \usage{
-create_template(livestock = list(), storage = NULL, token = NULL)
+create_template(
+  livestock = list(),
+  storage = NULL,
+  language = c("en", "de", "fr")[1],
+  token = NULL
+)
 }
 \arguments{
 \item{x}{model dump as json}
