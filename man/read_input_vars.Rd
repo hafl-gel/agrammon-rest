@@ -4,7 +4,7 @@
 \alias{read_input_vars}
 \title{process model dump}
 \usage{
-read_input_vars(x, language = "de", module = "")
+read_input_vars(x, language = "en", module = "")
 }
 \arguments{
 \item{x}{model dump as json}

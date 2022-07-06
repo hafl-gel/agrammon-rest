@@ -73,7 +73,7 @@ check_request <- function(req) {
 #' @examples
 #' mj <- get_input_template()
 #' x <- read_input_vars(mj)
-read_input_vars <- function(x, language = 'de', module = '') {
+read_input_vars <- function(x, language = 'en', module = '') {
     nms <- names(x)
     # capture instances
     if ('instances' %in% nms) {
@@ -119,7 +119,7 @@ read_input_vars <- function(x, language = 'de', module = '') {
     }
     # loop over sub-modules
     for (nm in nms) {
-        out <- rbind(out, read_input_vars(x[[nm]], module = modules[nm]), use.names = TRUE, fill = TRUE)
+        out <- rbind(out, read_input_vars(x[[nm]], language = language, module = modules[nm]), use.names = TRUE, fill = TRUE)
     }
     out
 }
