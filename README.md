@@ -1,14 +1,3 @@
----
-title: "agrammon"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{agrammon}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-
-
 # R Package agrammon
 
 ## Installation
