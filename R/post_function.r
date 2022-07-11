@@ -819,15 +819,17 @@ agrammon_options <- function(show = FALSE, ...) {
 #' # return report on N flow
 #' report(res, 'N')
 report <- function(x, report = 'summary') {
-    # TODO: partial matching + check on 'full' results
-    # return if 'full'
-    if ('full' %in% report) return(x)
+    # TODO: check on 'full' results
     # get available reports
     ok <- sub('.rds', '', dir(system.file('reports', package = 'agrammon')), fixed = TRUE)
+    # partially match report argument
+    report_matched <- pmatch(report, c('full', ok))
     # check
-    if (!all(report %in% ok)) {
-        stop('argument "report" contains unrecognized report names')
-    }
+    if (anyNA(report_matched)) stop('argument "report" contains invalid or unrecognized report names')
+    # get reports
+    report <- c('full', ok)[report_matched]
+    # return if 'full'
+    if ('full' %in% report) return(x)
     # get rds file(s)
     rps <- unique(rbindlist(lapply(report, function(r) {
             readRDS(system.file('reports', paste0(r, '.rds'), package = 'agrammon'))
