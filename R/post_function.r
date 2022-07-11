@@ -1,7 +1,10 @@
 
 # TODO:
-#   - don't export agrammon_options, run_model, ...
-#   - add vignette (incl. data set)
+#   - change reports!!!
+#   - change 'full' report to default
+#   - add agrammon.default to options (report + filter + language + data.table)
+#   - add function to set/get_default_options -> agrammon_options
+#   - change register_token -> agrammon_token -> get if no args
 # # TODO: check all cases!!!
 
 #' Run Agrammon
