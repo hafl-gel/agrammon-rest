@@ -32,6 +32,8 @@ The `agrammon` package provides 4 functions that let the user
 - `register_token()`: store and re-use the personal access token (section [Access Token](#access-token))
 - `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input-data-set))
 - `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run-agrammon))
+- `agrammon_defaults()`: save some package specific defaults for the current R session (section [Run Agrammon](#run-agrammon))
+- `report()`: extract report from a "full" set of model results (section [Run Agrammon](#run-agrammon))
 - `save_excel()`: save results as an excel file (end of section [Run Agrammon](#run-agrammon))
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
@@ -131,10 +133,15 @@ inputs. However, if you encounter issues that might be related to false column a
 
 With the path to the input data set file, the model can be run with the `run_agrammon()` function.
 
+### Setting user specific defaults
+
+Defaults to the function `run_agrammon()` can be saved on a R session basis by using the function 
+`agrammon_defaults()`.
+
 ### Specifying different reports
 
-The content of the returned model result can be limited to contain specific result reports. At the moment,
-the following reports can be specified with argument `report`:
+The content of the returned model result can be limited to contain specific result reports.
+At the moment, the following reports can be specified with argument `report`:
 
 | argument `report` | model reporting |
 |:---|:---|
@@ -146,6 +153,8 @@ the following reports can be specified with argument `report`:
 | `"HAFL"` | Report used in teaching classes |
 | `"full"` | Full (!) set of model results |
 
+Argument `report` will be partially matched.
+
 
 ```r
 # path to example data set
@@ -156,9 +165,35 @@ run_agrammon(path_ex)
 run_agrammon(path_ex, report = 'det')
 ```
 
-### Results by animal category
+### Extracting reports from "full" set of results
 
-It is possible to "filter" the model results, i.e. attribute them to the different animal categories:
+Instead of calling the Agrammon model with different reports several times, it is also possible to call Agrammon
+once with the "full" report returning and extract the reports afterwards. This allows to extract several reports
+by using only one model call which is faster, though, this means also an increased data traffic, since the full set
+of model results is returned (which might not be necessary if e.g. one is just interested in one specific report).
+
+
+```r
+# path to example data set
+path_ex <- system.file('inst/extdata', 'example_data_set_3farms.csv', package = 'agrammon')
+# run model with 'full' report:
+res <- run_agrammon(path_ex, report = 'full')
+# extract N report
+report(res, 'N')
+```
+
+### Results filtered by animal category
+
+It is possible to "filter" the model results, i.e. attribute them to the different animal categories. 
+The following filters can be specified:
+
+| argument `filter` | animal category filtering |
+|:---|:---|
+| `"total_only"` | Only the total amount from all animal categories will be returned |
+| `"existing_categories"` | Individual values incl. the total amount from all animal categories that exist in the input data set will be returned |
+| `"all_categories"` | Individual values incl. the total amount from _all animal categories that can be defined_ will be returned |
+
+Argument `filter` will be partially matched. 
 
 
 ```r
@@ -170,3 +205,5 @@ run_agrammon(path_ex, filter = 'all')
 # detailed results incl. filter by existing categories
 run_agrammon(path_ex, report = 'det', filter = 'ex')
 ```
+
+Valid filter options are "total_only", "existing_categories" and "all_categories".
