@@ -5,6 +5,7 @@
 #   - add agrammon.default to options (report + filter + language + data.table)
 #   - add function to set/get_default_options -> agrammon_options
 #   - change register_token -> agrammon_token -> get if no args
+#   - check report 'n-balance'!
 # # TODO: check all cases!!!
 
 #' Run Agrammon
@@ -419,11 +420,7 @@ check_report <- function(report) {
     #   -> see End.nhd for valid reports incl. print-only
     #       labels
     valid <- list(
-        summary = c(
-                'SummaryLivestock', 
-                'SummaryPlantProduction',
-                'SummaryTotal'
-                ),
+        full = '',
         detailed = c(
             'LivestockNH3',
             'PlantNH3',
@@ -434,20 +431,27 @@ check_report <- function(report) {
             'LivestockNtot',
             'LivestockTAN'
             ),
-        full = '',
-        NH3 = c(
+        'nh3-loss' = c(
             'LivestockNH3',
             'PlantNH3',
             'SummaryTotal'
+                ),
+        'tan-flow' = 'LivestockTAN',
+        'ntot-flow' = 'LivestockNtot',
+        'nxox-loss' = c(
+            'LivestockN2O',
+            'LivestockNO',
+            'LivestockN2'
             ),
-        TAN = 'LivestockTAN',
-        N = c(
+        'n-balance' = c(
+            'LivestockNH3',
+            'PlantNH3',
             'LivestockN2O',
             'LivestockNO',
             'LivestockN2',
             'LivestockNtot'
             ),
-        HAFL = c(
+        hafl = c(
             'LivestockNH3',
             'PlantNH3',
             'SummaryTotal',
