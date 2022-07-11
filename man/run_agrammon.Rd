@@ -44,9 +44,10 @@ run the Agrammon model via its REST interface.
 # path to example input data set
 path_example <- system.file('extdata', 'example_data_set_3farms.csv',
   package = 'agrammon')
-# return default report
-run_agrammon(path_example)
+# return default report and extract tan flow results
+res <- run_agrammon(path_example)
+report(res, 'tan')
 # return report on NH3 losses and split up the result by all 
 # animal categories that exist in the input data set
-run_agrammon(path_example, report = 'NH3', filter = 'ex')
+run_agrammon(path_example, report = 'nh3', filter = 'ex')
 }

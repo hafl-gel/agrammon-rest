@@ -16,6 +16,5 @@ result from an Agrammon model run
 description
 }
 \examples{
-## examples here
 wide_output(res)
 }

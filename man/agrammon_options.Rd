@@ -20,7 +20,6 @@ a list of agrammon REST interface options
 return a list of valid Agrammon REST interface options
 }
 \examples{
-## examples here
 agrammon_options(show = TRUE)
 agrammon_options(language = 'de', print = c('LivestockNH3', 'LivestockTAN'))
 }

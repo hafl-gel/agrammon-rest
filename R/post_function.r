@@ -1,11 +1,4 @@
 
-# TODO:
-#   - change reports!!!
-#   - change 'full' report to default
-#   - add agrammon.default to options (report + filter + language + data.table)
-#   - add function to set/get_default_options -> agrammon_options
-#   - change register_token -> agrammon_token -> get if no args
-#   - check report 'n-balance'!
 # # TODO: check all cases!!!
 
 #' Run Agrammon
@@ -31,11 +24,12 @@
 #' # path to example input data set
 #' path_example <- system.file('extdata', 'example_data_set_3farms.csv',
 #'   package = 'agrammon')
-#' # return default report
-#' run_agrammon(path_example)
+#' # return default report and extract tan flow results
+#' res <- run_agrammon(path_example)
+#' report(res, 'tan')
 #' # return report on NH3 losses and split up the result by all 
 #' # animal categories that exist in the input data set
-#' run_agrammon(path_example, report = 'NH3', filter = 'ex')
+#' run_agrammon(path_example, report = 'nh3', filter = 'ex')
 run_agrammon <- function(input_file, 
     report = getOption('agrammon.report', 'full'),
     filter = getOption('agrammon.filter', 'total_only'), 
@@ -171,7 +165,6 @@ agrammon_defaults <- function(report, filter,
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
 #' @examples
-#' ## examples here
 #' run_model('./tests/inputs-version6-rest.csv')
 #' run_model('./tests/inputs-version6-rest.csv', language = 'de')
 run_model <- function(input_file, model_options = agrammon_options(), token = NULL) {
@@ -306,7 +299,6 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
 #' @examples
-#' ## examples here
 #' wide_output(res)
 wide_output <- function(x) {
     # set sorting
@@ -359,8 +351,6 @@ wide_output <- function(x) {
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
 #' @export
-#' @examples
-#' ## examples here
 save_excel <- function(x, file, wide_format = FALSE, asTable = TRUE) {
     if (!require(openxlsx)) {
         stop('package "openxlsx" is not available!\n\n', 
@@ -767,7 +757,6 @@ check_and_validate <- function(dt, token = NULL) {
 #' @param \dots agrammon REST interface options
 #' @return a list of agrammon REST interface options
 #' @examples
-#' ## examples here
 #' agrammon_options(show = TRUE)
 #' agrammon_options(language = 'de', print = c('LivestockNH3', 'LivestockTAN'))
 agrammon_options <- function(show = FALSE, ...) {
@@ -871,14 +860,13 @@ agrammon_options <- function(show = FALSE, ...) {
 #' @return report based subset of results
 #' @export
 #' @examples
-#' ## examples here
 #' # path to example input data set
 #' path_example <- system.file('extdata', 'example_data_set_3farms.csv',
 #'   package = 'agrammon')
 #' # run agrammon
 #' res <- run_agrammon(path_example, report = 'full')
-#' # return report on N flow
-#' report(res, 'N')
+#' # return report on Ntot flow
+#' report(res, 'ntot')
 report <- function(x, report = 'summary') {
     # check on data.table
     if (is_df <- !is.data.table(x)) {

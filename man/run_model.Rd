@@ -16,7 +16,6 @@ result from an Agrammon model run
 description
 }
 \examples{
-## examples here
 run_model('./tests/inputs-version6-rest.csv')
 run_model('./tests/inputs-version6-rest.csv', language = 'de')
 }

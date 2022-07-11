@@ -19,12 +19,11 @@ report based subset of results
 extract report from Agrammon results
 }
 \examples{
-## examples here
 # path to example input data set
 path_example <- system.file('extdata', 'example_data_set_3farms.csv',
   package = 'agrammon')
 # run agrammon
 res <- run_agrammon(path_example, report = 'full')
-# return report on N flow
-report(res, 'N')
+# return report on Ntot flow
+report(res, 'ntot')
 }

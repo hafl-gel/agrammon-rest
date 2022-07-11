@@ -15,6 +15,3 @@ result from an Agrammon model run
 \description{
 description
 }
-\examples{
-## examples here
-}
