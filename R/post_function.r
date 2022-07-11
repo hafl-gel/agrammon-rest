@@ -799,3 +799,50 @@ agrammon_options <- function(show = FALSE, ...) {
         out
     }
 }
+
+#' Extract Report
+#'
+#' extract report from Agrammon results
+#'
+#' @param x results from a call to run_agrammon with argument \code{report = 'full'}
+#' @param report string defining the content of the returned model result. 
+#' Partial matching of argument.
+#' @return report based subset of results
+#' @export
+#' @examples
+#' ## examples here
+#' # path to example input data set
+#' path_example <- system.file('extdata', 'example_data_set_3farms.csv',
+#'   package = 'agrammon')
+#' # run agrammon
+#' res <- run_agrammon(path_example, report = 'full')
+#' # return report on N flow
+#' report(res, 'N')
+report <- function(x, report = 'summary') {
+    # TODO: partial matching + check on 'full' results
+    # return if 'full'
+    if ('full' %in% report) return(x)
+    # get available reports
+    ok <- sub('.rds', '', dir(system.file('reports', package = 'agrammon')), fixed = TRUE)
+    # check
+    if (!all(report %in% ok)) {
+        stop('argument "report" contains unrecognized report names')
+    }
+    # get rds file(s)
+    rps <- unique(rbindlist(lapply(report, function(r) {
+            readRDS(system.file('reports', paste0(r, '.rds'), package = 'agrammon'))
+    })))
+    # merge with x
+    out <- merge(rps, x, all.x = TRUE)
+    # fix values
+    out[, c('value', 'value_num', 'value_chr') := list(value_num, NULL, NULL)]
+    # reorder columns
+    setcolorder(out, c('simulation', 'farm_id', 'stage', 'variable_type', 'tracer', 'module',
+            'variable', 'filter', 'value', 'unit'))
+    # sort rows
+    stages_out <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
+    out <- out[order(farm_id, match(stage, stages_out, nomatch = 999))]
+    # return
+    out[]
+}
+
