@@ -6,9 +6,9 @@
 \usage{
 run_agrammon(
   input_file,
-  report = c("summary", "detailed", "full", "NH3", "TAN", "N", "HAFL")[1],
-  filter = c("total_only", "existing_categories", "all_categories")[1],
-  language = c("en", "de", "fr")[1],
+  report = getOption("agrammon.report", "full"),
+  filter = getOption("agrammon.filter", "total_only"),
+  language = getOption("agrammon.language", "en"),
   data.table = getOption("agrammon.datatable", TRUE),
   token = NULL,
   ...
@@ -18,12 +18,15 @@ run_agrammon(
 \item{input_file}{path to CSV file containing model input data}
 
 \item{report}{string defining the content of the returned model result. 
+Check the table in the vignette to get more information on valid entries. 
 Partial matching of argument.}
 
 \item{filter}{string defining the detail with which the result is split up by animal category.
+Valid entries are \code{'total_only'}, \code{'existing_categories'} or \code{'all_categories')}.
 Partial matching of argument.}
 
-\item{language}{language for the units in the model result. Defaults to English ('en')}
+\item{language}{language for the units in the model result. Valid entries are \code{'en'},
+\code{'de'} or \code{'fr'}. Defaults to English ('en')}
 
 \item{data.table}{logical. should the result be returned as \code{data.table} 
 (\code{TRUE}; default) or \code{data.frame} (\code{FALSE}).}

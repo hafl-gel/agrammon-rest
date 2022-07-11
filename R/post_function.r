@@ -14,10 +14,13 @@
 #'
 #' @param input_file path to CSV file containing model input data
 #' @param report string defining the content of the returned model result. 
+#' Check the table in the vignette to get more information on valid entries. 
 #' Partial matching of argument.
 #' @param filter string defining the detail with which the result is split up by animal category.
+#' Valid entries are \code{'total_only'}, \code{'existing_categories'} or \code{'all_categories')}.
 #' Partial matching of argument.
-#' @param language language for the units in the model result. Defaults to English ('en')
+#' @param language language for the units in the model result. Valid entries are \code{'en'},
+#' \code{'de'} or \code{'fr'}. Defaults to English ('en')
 #' @param data.table logical. should the result be returned as \code{data.table} 
 #' (\code{TRUE}; default) or \code{data.frame} (\code{FALSE}).
 #' @param token Agrammon REST-API access token.
@@ -34,10 +37,11 @@
 #' # animal categories that exist in the input data set
 #' run_agrammon(path_example, report = 'NH3', filter = 'ex')
 run_agrammon <- function(input_file, 
-    report = c('summary', 'detailed', 'full', 'NH3', 'TAN', 'N', 'HAFL')[1],
-    filter = c('total_only', 'existing_categories', 'all_categories')[1], 
-    language = c('en', 'de', 'fr')[1], 
-    data.table = getOption('agrammon.datatable', TRUE), token = NULL, ...) {
+    report = getOption('agrammon.report', 'full'),
+    filter = getOption('agrammon.filter', 'total_only'), 
+    language = getOption('agrammon.language', 'en'), 
+    data.table = getOption('agrammon.datatable', TRUE), 
+    token = NULL, ...) {
     # check input_file
     if (!is.character(input_file)) {
         stop('argument "input_file" must be of type character')
@@ -110,6 +114,54 @@ run_agrammon <- function(input_file,
     )
     # run model
     run_model(input_file, model_options, check_token(token))
+}
+
+#' Set Agrammon Options
+#'
+#' set agrammon package related options
+#'
+#' This function is helping to set user specific defaults
+#' on a R session basis. 
+#'
+#' If no argument is provided, the current user defined defaults
+#' will be returned. 
+#'
+#' User specific defaults can be cleared by assigning a value of \code{NULL}.
+#'
+#' @param report set the default for argument \code{report} in function \code{run_agrammon}.
+#' @param filter set the default for argument \code{filter} in function \code{run_agrammon}.
+#' @param language set the language of the template help and units
+#' @param data.table should \code{run_agrammon} return a \code{data.table} or a \code{data.frame}?
+#' @return nothing unless no argument is provided (see Details)
+#' @export
+#' @examples
+#' # get current user specific defaults
+#' agrammon_defaults()
+#' # set default to 'full' report
+#' agrammon_defaults(report = 'full')
+#' agrammon_defaults()
+#' # remove it again
+#' agrammon_defaults(report = NULL)
+#' agrammon_defaults()
+agrammon_defaults <- function(report, filter,
+    language, data.table) {
+    # check missing
+    arg_list <- list(
+        report = if (missing(report)) 'missing' else report,
+        filter = if (missing(filter)) 'missing' else filter,
+        language = if (missing(language)) 'missing' else language,
+        data.table = if (missing(data.table)) 'missing' else data.table
+    )
+    arg_names <- names(arg_list) <- paste0('agrammon.', names(arg_list))
+    arg_list <- arg_list[!unlist(lapply(arg_list, function(x) is.character(x) && length(x) == 1 && x == 'missing'))]
+    if (length(arg_list) == 0) {
+        # print current options
+        return(
+            do.call(options, as.list(arg_names))
+        )
+    }
+    # set arguments
+    do.call(options, arg_list)
 }
 
 #' title
