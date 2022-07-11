@@ -37,6 +37,7 @@ The `agrammon` package provides 4 functions that let the user
 - `register_token()`: store and re-use the personal access token (section [Access Token](#access-token))
 - `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input-data-set))
 - `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run-agrammon))
+- `report()`: extract report from a "full" set of model results (section [Run Agrammon](#run-agrammon))
 - `save_excel()`: save results as an excel file (end of section [Run Agrammon](#run-agrammon))
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
@@ -145,7 +146,23 @@ run_agrammon(path_ex)
 run_agrammon(path_ex, report = 'det')
 ```
 
-### Results by animal category
+### Extracting reports from "full" set of results
+
+Instead of calling the Agrammon model with different reports several times, it is also possible to call Agrammon
+once with the "full" report returning and extract the reports afterwards. This allows to extract several reports
+by using only one model call which is faster, though, this means also an increased data traffic, since the full set
+of model results is returned (which might not be necessary if e.g. one is just interested in one specific report).
+
+```{r extract-report, eval = FALSE}
+# path to example data set
+path_ex <- system.file('inst/extdata', 'example_data_set_3farms.csv', package = 'agrammon')
+# run model with 'full' report:
+res <- run_agrammon(path_ex, report = 'full')
+# extract N report
+report(res, 'N')
+```
+
+### Results filtered by animal category
 
 It is possible to "filter" the model results, i.e. attribute them to the different animal categories:
 
