@@ -458,6 +458,8 @@ check_report <- function(report) {
             'LivestockTAN'
             )
     )
+    # return names of report without arguments
+    if (missing(report) || is.null(report)) return(names(valid))
     # check argument report
     if (length(report) != 1 || !is.character(report) || 
         is.na(report <- pmatch(report, names(valid)))) {
