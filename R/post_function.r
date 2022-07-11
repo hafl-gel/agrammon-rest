@@ -819,7 +819,12 @@ agrammon_options <- function(show = FALSE, ...) {
 #' # return report on N flow
 #' report(res, 'N')
 report <- function(x, report = 'summary') {
-    # TODO: check on 'full' results
+    # check on data.table
+    if (is_df <- !is.data.table(x)) {
+        x <- as.data.table(x)
+    }
+    # check if x contains 'full' report
+    if (x[, !('internal' %in% variable_type)]) stop('argument "x" must contain results from "full" report')
     # get available reports
     ok <- sub('.rds', '', dir(system.file('reports', package = 'agrammon')), fixed = TRUE)
     # partially match report argument
@@ -845,6 +850,10 @@ report <- function(x, report = 'summary') {
     stages_out <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
     out <- out[order(farm_id, match(stage, stages_out, nomatch = 999))]
     # return
-    out[]
+    if (is_df) {
+        as.data.frame(out)
+    } else {
+        out[]
+    }
 }
 
