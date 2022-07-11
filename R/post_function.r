@@ -263,7 +263,7 @@ wide_output <- function(x) {
         'ponies_and_asses', 'fattening_sheep', 'milksheep', 'goats')
     # check if data.table
     if (isdf <- !is.data.table(x)) {
-        setDT(x)
+        x <- as.data.table(x)
     } else {
         x <- copy(x)
     }
@@ -288,12 +288,12 @@ wide_output <- function(x) {
     } else {
         out <- out[order(farm_id, match(filter, sort_filter, nomatch = 9999))]
     }
-    # change back to data.frame
-    if (isdf) {
-        setDF(out)
-    }
     # return
-    out[]
+    if (isdf) {
+        as.data.frame(out)
+    } else {
+        out[]
+    }
 }
 
 #' title
