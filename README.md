@@ -121,18 +121,18 @@ An example data file is shipped with the package.
 # example input data set
 path_ex <- system.file('extdata', 'example_data_set_3farms.csv', package = 'agrammon')
 fread(path_ex)
-#>                           V1    V2                                                  V3                        V4        V5
-#>   1: Q2015_Version6_20210818 10004      Livestock::OtherCattle[Beef Cattle]::Excretion         dimensioning_barn        78
-#>   2: Q2015_Version6_20210818 10004                          Application::Slurry::Csoft              appl_hotdays sometimes
-#>   3: Q2015_Version6_20210818 10004                     Application::Slurry::Cfermented          fermented_slurry         0
-#>   4: Q2015_Version6_20210818 10004                          Application::Slurry::Ctech      share_deep_injection         0
-#>   5: Q2015_Version6_20210818 10004 Livestock::OtherCattle[Beef Cattle]::Housing::Floor  mitigation_housing_floor      none
-#>  ---                                                                                                                      
-#> 303: Q2015_Version6_20210818 10020                        Application::Slurry::Cseason appl_autumn_winter_spring        50
-#> 304: Q2015_Version6_20210818 10020                        Application::Slurry::Cseason               appl_summer        50
-#> 305: Q2015_Version6_20210818 10020                   Application::SolidManure::Cseason appl_autumn_winter_spring        50
-#> 306: Q2015_Version6_20210818 10020                   Application::SolidManure::Cseason               appl_summer        50
-#> 307: Q2015_Version6_20210818 10020                          Application::Slurry::Csoft              appl_evening         0
+#>             V1 V2                                                  V3                        V4        V5
+#>   1: ex_3farms  1      Livestock::OtherCattle[Beef Cattle]::Excretion         dimensioning_barn        78
+#>   2: ex_3farms  1                          Application::Slurry::Csoft              appl_hotdays sometimes
+#>   3: ex_3farms  1                     Application::Slurry::Cfermented          fermented_slurry         0
+#>   4: ex_3farms  1                          Application::Slurry::Ctech      share_deep_injection         0
+#>   5: ex_3farms  1 Livestock::OtherCattle[Beef Cattle]::Housing::Floor  mitigation_housing_floor      none
+#>  ---                                                                                                     
+#> 303: ex_3farms  3                        Application::Slurry::Cseason appl_autumn_winter_spring        50
+#> 304: ex_3farms  3                        Application::Slurry::Cseason               appl_summer        50
+#> 305: ex_3farms  3                   Application::SolidManure::Cseason appl_autumn_winter_spring        50
+#> 306: ex_3farms  3                   Application::SolidManure::Cseason               appl_summer        50
+#> 307: ex_3farms  3                          Application::Slurry::Csoft              appl_evening         0
 ```
 
 The first column is optional and contains the simulation label. The
