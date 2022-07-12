@@ -1,6 +1,8 @@
 ---
-title: "agrammon"
-output: rmarkdown::html_vignette
+title: "R Package agrammon"
+output: 
+  rmarkdown::html_vignette:
+    number_sections: true
 vignette: >
   %\VignetteIndexEntry{agrammon}
   %\VignetteEngine{knitr::rmarkdown}
@@ -15,18 +17,7 @@ knitr::opts_chunk$set(
 library(agrammon)
 ```
 
-# R Package agrammon
-
-## Installation
-
-The package can be installed from GitHub. Use `build_vignettes = TRUE` if you want this vignette 
-available locally:
-
-```{r install, eval = FALSE}
-devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
-```
-
-## Introduction
+# Introduction
 
 This package facilitates using the Nitrogen flow model Agrammon (www.agrammon.ch) via its REST API interface with the help of R.
 The communication between the R session and the Agrammon model is possible via Agrammon's REST API ([Wikipedia: REST interface](https://en.wikipedia.org/wiki/Representational_state_transfer)
@@ -58,7 +49,16 @@ See section [Input Data Set](#input-data-set) for further explanation and exampl
 
 The user can process the results in the current R session or save them as an EXCEL file using `save_excel()`.
 
-## Access Token
+# Installation
+
+The package can be installed from GitHub. Use `build_vignettes = TRUE` if you want this vignette 
+available locally:
+
+```{r install, eval = FALSE}
+devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
+```
+
+# Access Token
 
 A personal access token (i.e., a string representing the user API key) is required to communicate with the Agrammon REST interface.
 This access token can be requested at support@agrammon.ch.
@@ -68,9 +68,9 @@ directory (`Sys.getenv("HOME")`)) using the function `register_token()`.
 If the file `.Renviron` does not exist in the user home directory a new file will be created, otherwise a line containing the token will
 be added to the existing `.Renviron` file.
 
-## Input Data Set
+# Input Data Set
 
-### Valid Input Data
+## Valid Input Data
 
 Most of the Agrammon input variables are mandatory and must contain valid entries, only few input variables are optional and will 
 fall back on a predefined default. The function `save_template()` writes an input template file that can be used as guidance.
@@ -79,7 +79,7 @@ fall back on a predefined default. The function `save_template()` writes an inpu
 Optional input variables contain an entry in the column 'default' in the template. Remarks on valid inputs (numeric bounds, list of valid entries, etc.) are indicated in column
 'remarks' in the template.
 
-### Template - no categories specified
+## Template - no categories specified
 
 A template file with _all_ possible input variables (i.e. not limited to specific animal categories) can be written by
 setting the argument `livestock` to `TRUE`:
@@ -92,7 +92,7 @@ save_template('template_all.csv', TRUE)
 save_template('template_all_de.csv', TRUE, language = 'de')
 ```
 
-### Template - user defined categories
+## Template - user defined categories
 
 The user can provide specific animal categories or their parent classes to restrict the template content to these categories:
 
@@ -102,7 +102,7 @@ save_template('template_user.csv', list(RoughageConsuming = c('bisons', 'alpaca'
         wapiti = 'wapiti', dairy_cows = 'DC'), storage = 'tank 1')
 ```
 
-### Example Input Data
+## Example Input Data
 
 An example data file is shipped with the package.
 
@@ -119,16 +119,16 @@ The order of the columns is irrelevant since the package tries to find and assig
 inputs. However, if you encounter issues that might be related to false column assignment, please report this back as an issue on GitHub (link here!).
 
 
-## Run Agrammon
+# Run Agrammon
 
 With the path to the input data set file, the model can be run with the `run_agrammon()` function.
 
-### Setting user specific defaults
+## Setting user specific defaults
 
 Defaults to the function `run_agrammon()` can be saved on a R session basis by using the function 
 `agrammon_defaults()`.
 
-### Specifying different reports
+## Specifying different reports
 
 The content of the returned model result can be limited to contain specific result reports.
 At the moment, the following reports can be specified with argument `report`:
@@ -154,7 +154,7 @@ run_agrammon(path_ex)
 run_agrammon(path_ex, report = 'det')
 ```
 
-### Extracting reports from "full" set of results
+## Extracting reports from "full" set of results
 
 Instead of calling the Agrammon model with different reports several times, it is also possible to call Agrammon
 once with the "full" report returning and extract the reports afterwards. This allows to extract several reports
@@ -170,7 +170,7 @@ res <- run_agrammon(path_ex, report = 'full')
 report(res, 'N')
 ```
 
-### Results filtered by animal category
+## Results filtered by animal category
 
 It is possible to "filter" the model results, i.e. attribute them to the different animal categories. 
 The following filters can be specified:
