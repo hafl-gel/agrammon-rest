@@ -44,8 +44,7 @@ The `agrammon` package provides 6 functions that let the user
     current R session (section [Run Agrammon](#5-run-agrammon))
   - `report()`: extract report from a “full” set of model results
     (section [Run Agrammon](#5-run-agrammon))
-  - `save_excel()`: save results as an excel file (end of section [Run
-    Agrammon](#5-run-agrammon))
+  - `save_excel()`: save results as an excel file
 
 The main function of this package `run_agrammon()` needs the path to a
 CSV file with input data to run Agrammon. To help the user prepare a

@@ -30,7 +30,7 @@ The `agrammon` package provides 6 functions that let the user
 - `run_agrammon()`: run Agrammon via its REST interface (section [Run Agrammon](#run-agrammon))
 - `agrammon_defaults()`: save some package specific defaults for the current R session (section [Run Agrammon](#run-agrammon))
 - `report()`: extract report from a "full" set of model results (section [Run Agrammon](#run-agrammon))
-- `save_excel()`: save results as an excel file (end of section [Run Agrammon](#run-agrammon))
+- `save_excel()`: save results as an excel file
 
 The main function of this package `run_agrammon()` needs the path to a CSV file with input data to run Agrammon.
 To help the user prepare a valid input data file (i.e. a CSV file with all valid and necessary inputs), 
