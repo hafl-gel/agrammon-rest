@@ -1,5 +1,5 @@
 ---
-title: "R Package agrammon"
+title: "R Package `agrammon`"
 output: 
   rmarkdown::html_vignette:
     number_sections: true
@@ -19,11 +19,11 @@ library(agrammon)
 
 # Introduction
 
-This package facilitates using the Nitrogen flow model Agrammon (www.agrammon.ch) via its REST API interface with the help of R.
+The package `agrammon` facilitates using the Nitrogen flow model Agrammon (www.agrammon.ch) via its REST API interface with the help of R.
 The communication between the R session and the Agrammon model is possible via Agrammon's REST API ([Wikipedia: REST interface](https://en.wikipedia.org/wiki/Representational_state_transfer)
 and [Agrammon REST API](https://redocly.github.io/redoc/?url=https://model.agrammon.ch/single/api/v1/openapi.yaml).)
 
-The `agrammon` package provides 6 functions that let the user
+The package `agrammon` provides 6 functions that let the user
 
 - `register_token()`: store and re-use the personal access token (section [Access Token](#access-token))
 - `save_template()`: generate a valid data set (a CSV file) containing all necessary input data (section [Input Data Set](#input-data-set))
@@ -56,6 +56,12 @@ available locally:
 
 ```{r install, eval = FALSE}
 devtools::install_github('hafl-gel/agrammon-rest', build_vignettes = TRUE)
+```
+
+To load & attach the package in the current R session, run:
+
+```{r load, eval = FALSE}
+library(agrammon)
 ```
 
 # Access Token
