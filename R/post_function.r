@@ -622,30 +622,32 @@ check_and_validate <- function(dt, token = NULL) {
             if (any(nms_tab < n_max)) {
                 # missing entries
                 ind <- which(num < n_max)
+                miss_entries <- unique(paste0(module[ind], ' -> ', variable[ind], '\n'))
                 stop(
-                    'Missing entries!\n',
-                    'The majority of mandatory input variables appear ', n_max, ' times.\n',
-                    if (length(ind) > 1) {
-                        paste0('The following mandatory input variable appears less than ', n_max,' times:\n')
+                    '\nMissing input variable entries!\n',
+                    'There are ', n_max, ' input data sets (farms) but ',
+                    if (length(miss_entries) > 1) {
+                        paste0('the following mandatory input variables appear less than ', n_max,' times:\n')
                     } else {
-                        paste0('The following mandatory input variables appear less than ', n_max,' times:\n')
+                        paste0('the following mandatory input variable appears less than ', n_max,' times:\n')
                     },
-                    paste0(module[ind], ' -> ', variable[ind], '\n')
+                    miss_entries
                 )
             }
             # check larger
             if (any(nms_tab > n_max)) {
                 # duplicates
                 ind <- which(num > n_max)
+                miss_entries <- unique(paste0(module[ind], ' -> ', variable[ind], '\n'))
                 stop(
-                    'Too many entries!\n',
-                    'The majority of mandatory input variables appear ', n_max, ' times.\n',
-                    if (length(ind) > 1) {
-                        paste0('The following mandatory input variable appears more than ', n_max,' times:\n')
+                    '\nToo many input variable entries!\n',
+                    'There are ', n_max, ' input data sets (farms) but ',
+                    if (length(miss_entries) > 1) {
+                        paste0('the following input variables appear more than ', n_max,' times:\n')
                     } else {
-                        paste0('The following mandatory input variables appear more than ', n_max,' times:\n')
+                        paste0('the following input variable appears more than ', n_max,' times:\n')
                     },
-                    paste0(module[ind], ' -> ', variable[ind], '\n')
+                    miss_entries
                 )
             }
         } else if(nms_tab != 1) {
