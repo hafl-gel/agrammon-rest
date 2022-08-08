@@ -142,13 +142,14 @@ At the moment, the following reports can be specified with argument `report`:
 
 | argument `report` | model reporting |
 |:---|:---|
-| `"summary"` | Short summary on the "top-level" NH3 emissions |
-| `"detailed"` | Summary on the "top-level" NH3 and other gaseous N emissions, as well as on the total N and TAN flow |
-| `"NH3"` | Slightly more detailed summary on the NH3 emissions |
-| `"TAN"` | Summary on the TAN flow |
-| `"N"` | Summary on the total N flow |
-| `"HAFL"` | Report used in teaching classes |
+| `"nh3-loss"` | Summary on the NH3 emissions |
+| `"nxox-loss"` | Summary on the NxOx emissions (N2O, NO, N2) |
+| `"tan-flow"` | Summary on the TAN flow |
+| `"ntot-flow"` | Summary on the total N flow |
+| `"n-balance"` | Summary on the N balance (emissions + total N flow) |
+| `"detailed"` | Summary on the NH3 and other gaseous N emissions, as well as on the total N and TAN flow |
 | `"full"` | Full (!) set of model results |
+| `"hafl"` | Report used in teaching classes at the HAFL (NH3 + TAN) |
 
 Argument `report` will be partially matched.
 
