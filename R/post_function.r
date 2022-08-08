@@ -504,8 +504,8 @@ check_report <- function(report) {
     if (missing(report) || is.null(report)) return(names(valid))
     # check argument report
     if (length(report) != 1 || !is.character(report) || 
-        is.na(report <- pmatch(report, names(valid)))) {
-        stop('argument "report" is not valid')
+        is.na(report <- pmatch(tolower(report), names(valid)))) {
+        stop('argument "report" is not valid. Valid report names:\n', paste(names(valid), collapse = ', '))
     }
     # return print-only
     valid[[report]]
@@ -877,9 +877,10 @@ report <- function(x, report = 'summary') {
     # get available reports
     ok <- sub('.rds', '', dir(system.file('reports', package = 'agrammon')), fixed = TRUE)
     # partially match report argument
-    report_matched <- pmatch(report, c('full', ok))
+    report_matched <- pmatch(tolower(report), c('full', ok))
     # check
-    if (anyNA(report_matched)) stop('argument "report" contains invalid or unrecognized report names')
+    if (anyNA(report_matched)) stop('argument "report" contains invalid or unrecognized report names.', 
+        '\nValid report names are: ', paste0(check_report(), collapse = ', '))
     # get reports
     report <- c('full', ok)[report_matched]
     # return if 'full'
