@@ -1,3 +1,7 @@
+v1.1.2
+  - Fix/Update report names in vignette
+  - Allow upper-case report names
+  - Fix argument filter
 v1.1.1
   - Minor text changes in Vignette
   - Include toc in README and switch to numbered sections
