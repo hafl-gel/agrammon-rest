@@ -166,7 +166,8 @@ specifies input for more than one farm.
 The order of the columns is irrelevant since the package tries to find
 and assign the correct columns to the correct inputs. However, if you
 encounter issues that might be related to false column assignment,
-please report this back as an issue on GitHub (link here\!).
+please report this back as an issue on GitHub
+(<https://github.com/hafl-gel/agrammon-rest/issues>).
 
 # 5 Run Agrammon
 
