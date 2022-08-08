@@ -68,9 +68,12 @@ run_agrammon <- function(input_file,
     }
     # filter
     if (!missing(filter)) {
+        # valid filter arguments
+        valid_filters <- c('total_only', 'existing_categories', 'all_categories')
         # check argument filter
         if (length(filter) != 1 || !is.character(filter) || 
-            is.na(filter <- pmatch(filter, eval(formals(run_agrammon)[['filter']][[2]])))) {
+            is.na(filter <- valid_filters[pmatch(filter, valid_filters)])
+            ) {
             stop('argument "filter" is not valid')
         }
         # check 'include-filters' and 'all-filters'
@@ -80,7 +83,7 @@ run_agrammon <- function(input_file,
         }
         # assign filter
         filter <- switch(filter,
-            total = c('false', 'false'),
+            total_only = c('false', 'false'),
             existing_categories = c('true', 'false'),
             all_categories = c('true', 'true')
             )
