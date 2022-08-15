@@ -1,8 +1,8 @@
 Package: agrammon
 Type: Package
 Title: Run Agrammon via REST API
-Version: 1.1.2
-Date: 2022-08-08
+Version: 1.1.3
+Date: 2022-08-15
 Author: Christoph Häni
 Maintainer: Christoph Häni <christoph@bfh.ch>
 Description: This package facilitates using the Agrammon REST API from within R
