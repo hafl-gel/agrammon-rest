@@ -389,8 +389,10 @@ save_template <- function(file, livestock = list(), storage = NULL,
         # write to file
         if (language[1] != 'en' && .Platform[['OS.type']] == 'windows') {
             # fix encoding for extended latin characters
-            enc <- "latin1"
+            enc <- "UTF-8"
             f <- file(file, open = 'w', encoding = enc)
+            # add BOM
+            suppressWarnings(writeChar(iconv("\ufeff", to = "UTF-8"), f, eos = NULL))
             write.table(out, f, sep = primary, quote = FALSE, fileEncoding = enc)
             close(f)
         } else {
