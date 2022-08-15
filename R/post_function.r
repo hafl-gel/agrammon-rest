@@ -618,38 +618,56 @@ check_and_validate <- function(dt, token = NULL) {
         if (length(nms_tab) > 1) {
             # get max
             n_max <- nms_tab[which.max(tab)]
-            # check smaller
-            if (any(nms_tab < n_max)) {
-                # missing entries
-                ind <- which(num < n_max)
-                miss_entries <- unique(paste0(module[ind], ' -> ', variable[ind], '\n'))
-                stop(
-                    '\nMissing input variable entries!\n',
-                    'There are ', n_max, ' input data sets (farms) but ',
-                    if (length(miss_entries) > 1) {
-                        paste0('the following mandatory input variables appear less than ', n_max,' times:\n')
-                    } else {
-                        paste0('the following mandatory input variable appears less than ', n_max,' times:\n')
-                    },
-                    miss_entries
-                )
+            # check farm id in additional columns
+            if (n_max > 1) {
+                if (length(nms_extra_cols) == 0) {
+                    # missing farm id
+                    stop('A column containing the farm id is required\n',
+                        '    if more than one farm is specified in the input!')
+                }
+                # get lengths of unique entries
+                nc <- dt[, {
+                    lapply(.SD, function(x) {
+                            lux <- length(unique(x))
+                            # check unique col entries != ''
+                            if (lux == 1 && x[1] == '') {
+                                0L
+                            } else {
+                                lux
+                            }
+                        })
+                }, .SDcols = nms_extra_cols]
+                # get fic_ (farm id col) name (error if not found)
+                if (any(nf <- nc == n_max)) {
+                    fic_ <- get(nms_extra_cols[nf])
+                    if (sum(nf) > 1) {
+                        # farm id col not detectable
+                        # could be solved by checking each set according to fic_ entries, but this is too much hassle...
+                        stop('farm id column is required but cannot be detected. Multiple columns contain ', n_max, ' unique entries.')
+                    }
+                } else {
+                    stop('farm id column is required but cannot be detected. No column contains exactly ', n_max, ' unique entries.')
+                }
+            } else {
+                # only one data set
+                fic_ <- rep('', .N)
             }
-            # check larger
-            if (any(nms_tab > n_max)) {
-                # duplicates
-                ind <- which(num > n_max)
-                miss_entries <- unique(paste0(module[ind], ' -> ', variable[ind], '\n'))
-                stop(
-                    '\nToo many input variable entries!\n',
-                    'There are ', n_max, ' input data sets (farms) but ',
-                    if (length(miss_entries) > 1) {
-                        paste0('the following input variables appear more than ', n_max,' times:\n')
-                    } else {
-                        paste0('the following input variable appears more than ', n_max,' times:\n')
-                    },
-                    miss_entries
-                )
+            # Error on new line
+            cat('\n')
+            # get max error message
+            warn_length <- getOption('warning.length')
+            # set max error 
+            on.exit(options(warning.length = warn_length))
+            options(warning.length = 8170)
+            # get message
+            err_msg <- missing_msg(num, n_max, module, variable, fic_, 50)
+            if (nchar(err_msg) > 8170) {
+                err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
             }
+            # print error message
+            stop(
+                err_msg
+                )
         } else if(nms_tab != 1) {
             # check farm id in additional columns
             if (length(nms_extra_cols) == 0) {
@@ -675,8 +693,10 @@ check_and_validate <- function(dt, token = NULL) {
                 if (sum(nf) > 1) {
                     # farm id col not detectable
                     # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                    stop('farm id column cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
+                    stop('farm id column is required but cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
                 }
+            } else {
+                stop('farm id column is required but cannot be detected. No column contains exactly ', n_max, ' unique entries.')
             }
             # get unique cols
             if (any(nf <- nc == 1)) {
@@ -751,6 +771,54 @@ check_and_validate <- function(dt, token = NULL) {
     c(list(data = dt), list_ids)
 }
 
+missing_msg <- function(num, n_max, module, variable, fic_, width = 40) {
+    # get index
+    ind <- which(num != n_max)
+    # get entries
+    entries <- paste0(module[ind], ' -> ', variable[ind])
+    # how many?
+    tab_entries <- table(entries)
+    # too few/many
+    diff_entries <- tab_entries - n_max
+    # get signs
+    sig_entries <- sign(diff_entries)
+    # first line
+    out <- paste0(
+        switch(as.character(sum(unique(sig_entries))),
+            '-1' = 'Missing ',
+            '0' = 'Missing/Too many ',
+            '1' = 'Too many '
+        ), 'input variable entries!\n\n')
+    # second line
+    out <- c(out, paste0('  -> There are ', n_max, ' input data sets (farms). ',
+        if (length(tab_entries) > 1) {
+            'Check the following input variables:\n\n'
+        } else {
+            'Check the following input variable:\n\n'
+        }))
+    # loop over unique entries
+    for (i in seq_along(diff_entries)) {
+        # which exist
+        farms <- fic_[ind[entries == names(tab_entries)[i]]]
+        # get missing/duplicates
+        if (sig_entries[i] < 0) {
+            all_farms <- unique(fic_)
+            print_farms <- paste(all_farms[!(all_farms %in% farms)], collapse = ', ')
+        } else {
+            print_farms <- paste(unique(farms[duplicated(farms)]), collapse = ', ')
+        }
+        # trim
+        if (nchar(print_farms) > width) print_farms <- paste0(strtrim(print_farms, width), '...')
+        # print variable
+        out <- c(out, paste0('  ', names(tab_entries)[i], ': ', abs(diff_entries[i]), 
+                if (sig_entries[i] < 0) ' missing (' else ' too many (',
+                print_farms,
+                ')\n'
+                ))
+    }
+    # return
+    paste(c(out, '\n'), collapse = '')
+}
 
 #' Agrammon Options
 #'
