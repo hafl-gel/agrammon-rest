@@ -665,9 +665,7 @@ check_and_validate <- function(dt, token = NULL) {
                 err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
             }
             # print error message
-            stop(
-                err_msg
-                )
+            stop(err_msg)
         } else if(nms_tab != 1) {
             # check farm id in additional columns
             if (length(nms_extra_cols) == 0) {
@@ -730,10 +728,53 @@ check_and_validate <- function(dt, token = NULL) {
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
+    # get number per module
+    temp_ins[, num_per_module := .N, by = module_]
+    # get number of farms
+    num_farms <- dt[, uniqueN(farm_id_)]
     # select check with instance
-    check_ins <- merge(temp_ins, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE)[, {
-        c(list(num = sum(!is.na(value))), .SD)
-    }, by = module_var_]
+    check_ins <- na.omit(merge(temp_ins, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE), cols = 'farm_id_')[, {
+        c(list(num = uniqueN(module_var_)), .SD)
+    }, by = .(farm_id_, module)]
+    # check missing/duplicated input
+    if(check_ins[, any(num != num_per_module)]) {
+        # missing entries
+        dbg <- merge(temp_ins[, .(module_, module_var_)], 
+            check_ins[num != num_per_module], all.x = TRUE)[, fid := get(list_ids$farm_id)]
+        err_msg_dt <- dbg[, {
+            if (!all(is.na(fid))) {
+                em <- ''
+                mv <- tstrsplit(module_var_, split = ';')
+                num_f <- uniqueN(fid, na.rm = TRUE)
+                tb <- table(fid, mv[[2]])
+                rn <- row.names(tb)
+                cn <- colnames(tb)
+                nvars <- length(cn)
+                for (i in seq_len(nrow(tb))) {
+                    fi <- rn[i]
+                    mod <- module[which(fid == fi)[1]]
+                    # add dummy farm for missing_msg to work!
+                    em <- c(em, missing_msg(
+                        tb[i, ],
+                        num_f,
+                        rep(mod, nvars),
+                        cn,
+                        rep(fi, nvars),
+                        single_check = TRUE
+                        ))
+                }
+                em
+            } else {
+                NULL
+            }
+        }, by = .(module_)]
+        err_msg <- err_msg_dt[, paste(V1, collapse = '')]
+        if (nchar(err_msg) > 8170) {
+            err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
+        }
+        # print error message
+        stop(err_msg)
+    }
     # add module parent to check
     check_ins[, parent := tstrsplit(module_, '[[]|[]]', keep = 1)]
     # loop by farm id, parent
@@ -771,17 +812,26 @@ check_and_validate <- function(dt, token = NULL) {
     c(list(data = dt), list_ids)
 }
 
-missing_msg <- function(num, n_max, module, variable, fic_, width = 40) {
+missing_msg <- function(number, farm_number, module, variable, farm_label, width = 40, single_check = FALSE) {
     # get index
-    ind <- which(num != n_max)
+    ind <- which(number != farm_number)
     # get entries
     entries <- paste0(module[ind], ' -> ', variable[ind])
     # how many?
     tab_entries <- table(entries)
+    if (single_check) {
+        tab_entries[entries] <- number[ind]
+    }
     # too few/many
-    diff_entries <- tab_entries - n_max
+    diff_entries <- tab_entries - farm_number
     # get signs
     sig_entries <- sign(diff_entries)
+    # fix out
+    if (single_check) {
+        num_wrong <- rep('', length(diff_entries))
+    } else {
+        num_wrong <- abs(diff_entries)
+    }
     # first line
     out <- paste0(
         switch(as.character(sum(unique(sig_entries))),
@@ -790,19 +840,26 @@ missing_msg <- function(num, n_max, module, variable, fic_, width = 40) {
             '1' = 'Too many '
         ), 'input variable entries!\n\n')
     # second line
-    out <- c(out, paste0('  -> There are ', n_max, ' input data sets (farms). ',
+    if (!single_check) {
+        out <- c(out, paste0('  -> There are ', farm_number, ' input data sets (farms). '))
+    }
+    out <- c(out, 
         if (length(tab_entries) > 1) {
             'Check the following input variables:\n\n'
         } else {
             'Check the following input variable:\n\n'
-        }))
+        })
     # loop over unique entries
     for (i in seq_along(diff_entries)) {
         # which exist
-        farms <- fic_[ind[entries == names(tab_entries)[i]]]
+        if (single_check) {
+            farms <- ''
+        } else {
+            farms <- farm_label[ind[entries == names(tab_entries)[i]]]
+        }
         # get missing/duplicates
         if (sig_entries[i] < 0) {
-            all_farms <- unique(fic_)
+            all_farms <- unique(farm_label)
             print_farms <- paste(all_farms[!(all_farms %in% farms)], collapse = ', ')
         } else {
             print_farms <- paste(unique(farms[duplicated(farms)]), collapse = ', ')
@@ -810,7 +867,7 @@ missing_msg <- function(num, n_max, module, variable, fic_, width = 40) {
         # trim
         if (nchar(print_farms) > width) print_farms <- paste0(strtrim(print_farms, width), '...')
         # print variable
-        out <- c(out, paste0('  ', names(tab_entries)[i], ': ', abs(diff_entries[i]), 
+        out <- c(out, paste0('  ', names(tab_entries)[i], ': ', num_wrong[i], 
                 if (sig_entries[i] < 0) ' missing (' else ' too many (',
                 print_farms,
                 ')\n'
