@@ -1,3 +1,5 @@
+v1.1.4
+  - Add missing check on missing/too many entries in individual instances
 v1.1.3
   - Improve error message on missing/too many entries in input data set
 v1.1.2
