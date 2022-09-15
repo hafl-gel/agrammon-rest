@@ -542,7 +542,7 @@ check_and_validate <- function(dt, token = NULL) {
             )
     }]
     # values from mandatory enums
-    mand_enums <- temp[default == '' & !grepl(
+    mand_enums <- temp[!grepl(
         '^$|^between|^greater( or equal)? th(a|e)n|^smaller( or equal)? th(a|e)n', 
         remarks),
         unlist(strsplit(remarks, split = ',', fixed = TRUE)), by = module_var]
@@ -739,7 +739,42 @@ check_and_validate <- function(dt, token = NULL) {
         }, .(farm_name, module, variable)]
         stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
     }
-    # NOTE: check limits and other validator related remarks should be captured by agrammon?
+    # check limits 
+    validator <- temp[grepl(
+        '^between|^greater( or equal)? th(a|e)n|^smaller( or equal)? th(a|e)n', 
+        remarks_), {
+        # fix greater or equal than
+        txt <- sub('greater or equal .*([-]?\\d) *$', '\\1 and Inf', remarks_)
+        # fix between
+        txt <- sub('between ', '', txt)
+        # extract lower and upper
+        .(
+            module_var_,
+            lower = as.numeric(sub(' *([-]?\\d+) and.*', '\\1', txt)),
+            upper = as.numeric(sub('.*and ([-]?\\d+|Inf) *$', '\\1', txt))
+        )
+    }]
+    check_vals <- merge(dt, validator, by.x = 'module_var', by.y = 'module_var_')[, 
+        c('lower_notok', 'upper_notok') := {
+            .(
+                as.numeric(value) < lower,
+                as.numeric(value) > upper
+                )
+    }]
+    if (check_vals[, any(lower_notok | upper_notok)]) {
+        err_msg <- check_vals[(lower_notok | upper_notok), {
+            if (.N > 1) {
+                paste0(.BY[[1]], ' ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
+            } else {
+                paste0(.BY[[1]], ': ', .BY[[2]], ';', .BY[[3]], 
+                    ' -> value ', value, ' is ',
+                    if (lower_notok) 'below lower' else 'above upper',
+                    ' limit of ', if (lower_notok) lower else upper
+                    )
+            }
+        }, by = .(farm_id_, module, variable)]
+        stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
+    }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
     # get number per module

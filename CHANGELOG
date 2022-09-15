@@ -1,4 +1,5 @@
 v1.1.5
+  - Add validation of numeric limits
   - Add check on enums input
   - Remove 'simulation' column from results
   - Fix column name order in report()
