@@ -745,21 +745,22 @@ check_and_validate <- function(dt, token = NULL) {
             if (!all(is.na(fid))) {
                 em <- ''
                 mv <- tstrsplit(module_var_, split = ';')
-                num_f <- uniqueN(fid, na.rm = TRUE)
                 tb <- table(fid, mv[[2]])
                 rn <- row.names(tb)
                 cn <- colnames(tb)
                 nvars <- length(cn)
                 for (i in seq_len(nrow(tb))) {
                     fi <- rn[i]
-                    mod <- module[which(fid == fi)[1]]
+                    mod <- unique(module[which(fid == fi)])
+                    # get unique instances
+                    num_instances <- length(mod)
                     # add dummy farm for missing_msg to work!
                     em <- c(em, missing_msg(
-                        tb[i, ],
-                        num_f,
-                        rep(mod, nvars),
-                        cn,
-                        rep(fi, nvars),
+                        number = tb[i, ],
+                        farm_number = num_instances,
+                        module = rep(mod, nvars),
+                        variable = cn,
+                        farm_label = rep(fi, nvars),
                         single_check = TRUE
                         ))
                 }
