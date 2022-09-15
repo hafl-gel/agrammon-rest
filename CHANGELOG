@@ -1,3 +1,8 @@
+v1.1.5
+  - Remove 'simulation' column from results
+  - Fix column name order in report()
+  - Change default for report() to 'nh3-loss'
+  - Fix error message for instances check introduced in v1.1.4
 v1.1.4
   - Add missing check on missing/too many entries in individual instances
 v1.1.3

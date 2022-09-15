@@ -268,21 +268,11 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # add type column
     res[, variable_type := 'internal'][tracer %in% c('n', 'tan'), variable_type := 'flow']
     res[tracer %in% c('nh3', 'n2', 'no', 'n2o'), variable_type := 'loss']
+    # reorder columns
+    setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms))
     # add unique cols
     if (!is.null(valid_data$unique_cols)) {
         res[, (valid_data$unique_cols) := valid_data$data[1, valid_data$unique_cols, with = FALSE]]
-        if (length(valid_data$unique_cols) == 1) {
-            # rename unique column
-            setnames(res, valid_data$unique_cols, 'simulation')
-            # reorder columns
-            setcolorder(res, c('simulation', 'farm_id', 'stage', 'variable_type', 'tracer',  nms))
-        } else {
-            # reorder columns
-            setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms, valid_data$unique_cols))
-        }
-    } else {
-        # reorder columns
-        setcolorder(res, c('farm_id', 'stage', 'variable_type', 'tracer', nms))
     }
     # reorder rows
     stages_out <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
@@ -998,11 +988,13 @@ agrammon_options <- function(show = FALSE, ...) {
 #' res <- run_agrammon(path_example, report = 'full')
 #' # return report on Ntot flow
 #' report(res, 'ntot')
-report <- function(x, report = 'summary') {
+report <- function(x, report = 'nh3-loss') {
     # check on data.table
     if (is_df <- !is.data.table(x)) {
         x <- as.data.table(x)
     }
+    # get names
+    nms <- names(x)
     # check if x contains 'full' report
     if (x[, !('internal' %in% variable_type)]) stop('argument "x" must contain results from "full" report')
     # get available reports
@@ -1022,11 +1014,10 @@ report <- function(x, report = 'summary') {
     })))
     # merge with x
     out <- merge(rps, x, all.x = TRUE)
+    # reorder columns
+    setcolorder(out, nms)
     # fix values
     out[, c('value', 'value_num', 'value_chr') := list(value_num, NULL, NULL)]
-    # reorder columns
-    setcolorder(out, c('simulation', 'farm_id', 'stage', 'variable_type', 'tracer', 'module',
-            'variable', 'filter', 'value', 'unit'))
     # sort rows
     stages_out <- c('Livestock', 'Storage', 'Application', 'PlantProduction', 'Total')
     out <- out[order(farm_id, match(stage, stages_out, nomatch = 999))]

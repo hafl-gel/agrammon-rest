@@ -4,7 +4,7 @@
 \alias{report}
 \title{Extract Report}
 \usage{
-report(x, report = "summary")
+report(x, report = "nh3-loss")
 }
 \arguments{
 \item{x}{results from a call to run_agrammon with argument \code{report = 'full'}}
