@@ -545,22 +545,22 @@ check_and_validate <- function(dt, token = NULL) {
     mand_enums <- temp[default == '' & !grepl(
         '^$|^between|^greater( or equal)? th(a|e)n|^smaller( or equal)? th(a|e)n', 
         remarks),
-        unlist(strsplit(remarks, split = ',', fixed = TRUE))]
-    # find module
+        unlist(strsplit(remarks, split = ',', fixed = TRUE)), by = module_var]
+    # find module column and valid module entries
     valid_module <- dt[, {
         check_semicolon <- lapply(.SD, grepl, pattern = "::", fixed = TRUE)
         semicol <- names(.SD)[which.max(lapply(check_semicolon, sum))]
         I(list(semicol, check_semicolon[[semicol]]))
     }]
-    # remove invalid columns
+    # remove invalid rows in module column
     dt <- dt[which(valid_module[[2]]), ]
-    # find variable
+    # find variable column
     nm_var <- dt[, {
         names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% temp[, variable])))]
     }, .SDcols = setdiff(names(dt), valid_module[[1]])]
-    # find value (mandatory entries)
+    # find value column (via mandatory entries)
     nm_val <- dt[, {
-        names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% mand_enums)))]
+        names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% mand_enums[, V1])))]
     }, .SDcols = setdiff(names(dt), c(valid_module[[1]], nm_var))]
     # rename columns
     setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
@@ -713,9 +713,33 @@ check_and_validate <- function(dt, token = NULL) {
     # get/add fic_ (to loop by)
     if (is.null(list_ids$farm_id)) {
         dt[, farm_id_ := 1L]
+        list_ids$farm_id <- 'farm_id_'
     } else {
         dt[, farm_id_ := frank(factor(get(list_ids$farm_id), levels = unique(get(list_ids$farm_id))), ties.method = 'dense')]
     }
+    # check mandatory - mandatory enums
+    setnames(mand_enums, c('modvar', 'valid'))
+    check_enums <- dt[module_var %chin% mand_enums[, unique(modvar)]][, {
+        c(.SD, 
+            list(
+                check = value %chin% mand_enums[modvar == .BY[[1]], valid],
+                farm_name = get(list_ids$farm_id)
+                )
+        )
+    }, by = module_var]
+    if (check_enums[, any(!check)]) {
+        err_msg <- check_enums[!(check), {
+            if (.N > 1) {
+                paste0(.BY[[1]], ' ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
+            } else {
+                paste0(.BY[[1]], ': ', .BY[[2]], ';', .BY[[3]], ' is not valid -> ',
+                    value, '\n  valid values are: ', 
+                    mand_enums[modvar == module_var, paste(valid, collapse = ', ')])
+            }
+        }, .(farm_name, module, variable)]
+        stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
+    }
+    # NOTE: check limits and other validator related remarks should be captured by agrammon?
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
     # get number per module
