@@ -601,8 +601,17 @@ check_and_validate <- function(dt, token = NULL) {
         # throw error if an entry is missing
         if (0 %in% nms_tab) {
             ind <- 0 %in% num
+            err_msg <- paste(unique(paste0('', module[ind], ' -> ', variable[ind], '\n')), collapse = '')
+            # get max error message
+            warn_length <- getOption('warning.length')
+            # set max error 
+            on.exit(options(warning.length = warn_length))
+            options(warning.length = 8170)
+            if (nchar(err_msg) > 8170) {
+                err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
+            }
             stop('Following mandatory input is missing:\n',
-                paste0('', module[ind], ' -> ', variable[ind], '\n')
+                err_msg
             )
         }
         if (length(nms_tab) > 1) {
@@ -730,9 +739,9 @@ check_and_validate <- function(dt, token = NULL) {
     if (check_enums[, any(!check)]) {
         err_msg <- check_enums[!(check), {
             if (.N > 1) {
-                paste0('Farm ID ', get(list_ids$farm_id)[1], ', ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
+                paste0('Farm ID "', get(list_ids$farm_id)[1], '", ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
             } else {
-                paste0('Farm ID ', get(list_ids$farm_id)[1], ': ', .BY[[2]], ';', .BY[[3]], ' is not valid -> ',
+                paste0('Farm ID "', get(list_ids$farm_id)[1], '": ', .BY[[2]], ';', .BY[[3]], ' is not valid -> ',
                     value, '\n  valid values are: \n  - ', 
                     mand_enums[modvar == module_var, paste(valid, collapse = '\n  - ')])
             }
@@ -740,7 +749,11 @@ check_and_validate <- function(dt, token = NULL) {
         wlen <- getOption('warning.length')
         on.exit(options(warning.length = wlen))
         options(warning.length = 8170)
-        stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
+        err_msg <- err_msg[, paste(V1, collapse = '\n\n')]
+        if (nchar(err_msg) > 8170) {
+            err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
+        }
+        stop('\n\n', err_msg)
     }
     # check limits 
     validator <- temp[grepl(
@@ -767,16 +780,23 @@ check_and_validate <- function(dt, token = NULL) {
     if (check_vals[, any(lower_notok | upper_notok)]) {
         err_msg <- check_vals[(lower_notok | upper_notok), {
             if (.N > 1) {
-                paste0('Farm ID ', get(list_ids$farm_id)[1], ', ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
+                paste0('Farm ID "', get(list_ids$farm_id)[1], '", ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
             } else {
-                paste0('Farm ID ', get(list_ids$farm_id)[1], ': ', .BY[[2]], ';', .BY[[3]], 
+                paste0('Farm ID "', get(list_ids$farm_id)[1], '": ', .BY[[2]], ';', .BY[[3]], 
                     ' -> value ', value, ' is ',
                     if (lower_notok) 'below lower' else 'above upper',
                     ' limit of ', if (lower_notok) lower else upper
                     )
             }
         }, by = .(farm_id_, module, variable)]
-        stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
+        wlen <- getOption('warning.length')
+        on.exit(options(warning.length = wlen))
+        options(warning.length = 8170)
+        err_msg <- err_msg[, paste(V1, collapse = '\n\n')]
+        if (nchar(err_msg) > 8170) {
+            err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
+        }
+        stop('\n\n', err_msg)
     }
     # check mandatory - with instance
     temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
@@ -821,6 +841,9 @@ check_and_validate <- function(dt, token = NULL) {
                 NULL
             }
         }, by = .(module_)]
+        wlen <- getOption('warning.length')
+        on.exit(options(warning.length = wlen))
+        options(warning.length = 8170)
         err_msg <- err_msg_dt[, paste(V1, collapse = '')]
         if (nchar(err_msg) > 8170) {
             err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
@@ -850,6 +873,9 @@ check_and_validate <- function(dt, token = NULL) {
     # any invalid entries:
     dt[!(module_var %chin% temp[, module_var_]), {
         if (.N > 0) {
+            wlen <- getOption('warning.length')
+            on.exit(options(warning.length = wlen))
+            options(warning.length = 8170)
             stop(
                 'Entries not valid!\n',
                 if (.N == 1) {
