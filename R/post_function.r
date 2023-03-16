@@ -767,9 +767,9 @@ check_and_validate <- function(dt, token = NULL) {
     if (check_vals[, any(lower_notok | upper_notok)]) {
         err_msg <- check_vals[(lower_notok | upper_notok), {
             if (.N > 1) {
-                paste0(.BY[[1]], ' ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
+                paste0('Farm ID ', .BY[[1]], ', ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
             } else {
-                paste0(.BY[[1]], ': ', .BY[[2]], ';', .BY[[3]], 
+                paste0('Farm ID ', .BY[[1]], ': ', .BY[[2]], ';', .BY[[3]], 
                     ' -> value ', value, ' is ',
                     if (lower_notok) 'below lower' else 'above upper',
                     ' limit of ', if (lower_notok) lower else upper
