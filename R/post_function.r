@@ -733,10 +733,13 @@ check_and_validate <- function(dt, token = NULL) {
                 paste0(.BY[[1]], ' ', .BY[[2]], ': variable ', .BY[[3]], ' has more than one entry!')
             } else {
                 paste0(.BY[[1]], ': ', .BY[[2]], ';', .BY[[3]], ' is not valid -> ',
-                    value, '\n  valid values are: ', 
-                    mand_enums[modvar == module_var, paste(valid, collapse = ', ')])
+                    value, '\n  valid values are: \n  - ', 
+                    mand_enums[modvar == module_var, paste(valid, collapse = '\n  - ')])
             }
         }, .(farm_name, module, variable)]
+        wlen <- getOption('warning.length')
+        on.exit(options(warning.length = wlen))
+        options(warning.length = 8170)
         stop('\n\n', err_msg[, paste(V1, collapse = '\n\n')])
     }
     # check limits 
