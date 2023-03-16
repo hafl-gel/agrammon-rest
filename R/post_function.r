@@ -883,7 +883,7 @@ check_and_validate <- function(dt, token = NULL) {
                 } else {
                     'The following input entries are not valid:\n'
                 },
-                paste0(module, ' -> ', variable, '\n')
+                paste0('Farm ID "', get(list_ids$farm_id), '": ', module, ' -> ', variable, '\n')
             )
         }
     }]
