@@ -1,3 +1,6 @@
+v1.1.6
+  - Fix removal of first row as header row when 'fread'ing input file
+  - Improve error messages
 v1.1.5
   - Add validation of numeric limits
   - Add check on enums input

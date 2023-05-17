@@ -195,7 +195,7 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # help user
     message('validating input file... ', appendLF = FALSE)
     # read input file
-    raw_input <- fread(file = input_file, showProgress = FALSE)
+    raw_input <- fread(file = input_file, showProgress = FALSE, header = FALSE)
     # validate input
     valid_data <- check_and_validate(raw_input, token = token)
     # help user
