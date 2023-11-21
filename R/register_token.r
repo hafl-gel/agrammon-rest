@@ -64,6 +64,7 @@ register_token <- function(token, permanent = TRUE) {
     }
     # register token for current session
     Sys.setenv(AGRAMMON_TOKEN = token)
+    options(agrammon.token = token)
     # return null
     invisible()
 }

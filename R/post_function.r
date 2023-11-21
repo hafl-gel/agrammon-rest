@@ -196,6 +196,7 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     message('validating input file... ', appendLF = FALSE)
     # read input file
     raw_input <- fread(file = input_file, showProgress = FALSE, header = FALSE)
+    browser()
     # validate input
     valid_data <- check_and_validate(raw_input, token = token)
     # help user
@@ -510,9 +511,21 @@ check_report <- function(report) {
 #'
 #' @param token valid access token string of \code{NULL}
 #' @return a valid access token string
-check_token <- function(token) {
-    if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')) {
-        stop('no token available')
+check_token <- function(token = NULL) {
+    if (is.null(token) && ((token <- Sys.getenv('AGRAMMON_TOKEN')) == '')
+        && ((token <- getOption('agrammon.token', '')) == '')) {
+        # try to read from permanent file
+        environ_file <- file.path(Sys.getenv("HOME"), ".Renviron")
+        if (!file.exists(file.path(Sys.getenv("HOME"), ".Renviron"))) {
+            stop('no token available')
+        }
+        # read file
+        environ_lines <- readLines(environ_file)
+        # find existing token entries and replace them
+        token_line <- grep("AGRAMMON_TOKEN=", environ_lines, value = TRUE)
+        if (!length(token_line)) stop('no token available')
+        token <- sub('AGRAMMON_TOKEN=', '', token_line)
+        Sys.setenv('AGRAMMON_TOKEN' = token)
     } else if (!is.character(token) || token == '') {
         stop('token not valid')
     }

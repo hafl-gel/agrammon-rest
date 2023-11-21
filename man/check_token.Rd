@@ -4,7 +4,7 @@
 \alias{check_token}
 \title{Check Agrammon Access Token}
 \usage{
-check_token(token)
+check_token(token = NULL)
 }
 \arguments{
 \item{token}{valid access token string of \code{NULL}}
