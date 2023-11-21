@@ -208,11 +208,15 @@ create_template <- function(livestock = list(), storage = NULL,
                 }
             }
         }
+        # sort to print in order
+        liv <- liv[order(match(animal_cat, 
+                c('DairyCow', 'OtherCattle', 'Pig', 'FatteningPigs', 'Poultry', 
+                    'Equides', 'SmallRuminants', 'RoughageConsuming')))]
         # print valid livestock input
-        cat('\n*** Valid list entry names for argument "livestock"\nproviding the animal category or its parent class:')
+        cat('\n***\nValid list entry names for argument "livestock".\nAnimal categories with corresponding parent class:\n***')
         liv[, {
             cat('\n  ', .BY[[1]], '\n      ')
-            cat(paste(enums[[1]], collapse = '\n      '))
+            cat(paste(sort(enums[[1]]), collapse = '\n      '))
         }, by = animal_cat]
         cat('\n***\n\n')
         # return from function
