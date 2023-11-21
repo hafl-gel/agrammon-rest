@@ -228,7 +228,7 @@ create_template <- function(livestock = list(), storage = NULL,
         x <- sub('[(]', ' ', validator)
         x <- gsub('[);]', '', x)
         x <- sub('[,]', ' and ', x)
-        sub('ge', 'greater or equal then', x)
+        sub('ge', 'greater or equal than', x)
     }]
     # set default NA to empty char ''
     inp_var[is.na(default), default := '']
