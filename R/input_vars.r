@@ -404,3 +404,589 @@ save_template <- function(file, livestock = list(), storage = NULL,
     # return null
     invisible()
 }
+
+### add documentation below!
+
+# create new data set
+# input for livestock animal categories: animal-category-label = list(animalcategory = ., ...)
+#   -> mandatory list entries: "animals" (number of animals)
+# input for slurry storage tanks: tank-label = list(...)
+#   -> mandatory list entries: "volume", "depth" and possibly "contains_cattle_manure"/"contains_pig_manure"
+# general input is provided as list without an argument name
+# run get_variable() to get an overview on all possible list entries
+# FIXME: !!!capture supplied arguments "dairy_cows", "pigs", "livestock_general", ...!!!
+
+#' @export
+create_dataset <- function(..., full_output = FALSE, data = NULL,
+    dairy_cows = list(
+        amount_summer = 1.5, 
+        amount_winter = 2.5, 
+        share_hay_summer = 0, 
+        share_maize_silage_summer = 0, 
+        share_maize_pellets_summer = 0, 
+        share_maize_silage_winter = 0, 
+        share_grass_silage_winter = 0, 
+        share_maize_pellets_winter = 0, 
+        share_potatoes_winter = 0, 
+        share_beets_winter = 0, 
+        milk_yield = 7500
+    ),
+    pigs = list(
+        energy_content = 'defaults',
+        crude_protein = 'defaults',
+        feeding_phase_1_crude_protein = 151,
+        feeding_phase_2_crude_protein = 151,
+        feeding_phase_3_crude_protein = 151 
+    ),
+    livestock_general = list(
+        housing_type = 'defaults', 
+        mitigation_housing_floor = 'none', 
+        # pigs
+        air_scrubber = 'none',
+        mitigation_housing_air = 'none',
+        # poultry
+        free_range = 'defaults',
+        manure_removal_interval = 'defaults',
+        drinking_system = 'defaults',
+        # yard
+        yard_days = 'defaults', 
+        yard_hours = 'defaults',
+        exercise_yard = 'available_roughage_is_not_supplied_in_the_exercise_yard', 
+        floor_properties_exercise_yard = 'defaults',
+        grazing_days = 'defaults', 
+        grazing_hours = 'defaults'
+    ),
+    storage_liquid = list(
+        mixing_frequency = '7_to_12_times_per_year',
+        cover_type = 'solid_cover'
+    ),
+    storage_solid = list(
+        share_applied_direct_poultry_manure = 12,
+        share_covered_basin = 70,
+        share_applied_direct_cattle_other_manure = 25,
+        share_covered_basin_cattle_manure = 0,
+        share_applied_direct_pig_manure = 0,
+        share_covered_basin_pig_manure = 0
+    ),
+    application_liquid = list(
+        dilution_parts_water = 1,
+        appl_rate = 25,
+        fermented_slurry = 0,
+        appl_summer = 53,
+        appl_autumn_winter_spring = 47,
+        appl_evening = 20,
+        appl_hotdays = 'sometimes',
+        share_splash_plate = 0,
+        share_trailing_hose = 100,
+        share_trailing_shoe = 0,
+        share_shallow_injection = 0,
+        share_deep_injection = 0
+    ),
+    application_solid = list(
+        incorp_lw1h = 0,
+        incorp_lw4h = 0,
+        incorp_lw8h = 0,
+        incorp_lw1d = 0,
+        incorp_lw3d = 0,
+        incorp_gt3d = 0,
+        incorp_none = 100,
+        appl_summer = 30,
+        appl_autumn_winter_spring = 70
+    ),
+    mineral_fertiliser = list(),
+    recycling_fertiliser = list(),
+    token = NULL
+    ) {
+    # bind arguments to single list
+    all_args <- list(...)
+    all_nms <- names(all_args)
+    if (is.null(data)) {
+        # check token
+        token <- agrammon:::check_token(token)
+        if (is.null(all_nms)) stop('arguments must contain at least one animal category provided as label = list(animalcategory = ., ...)')
+        # check named arguments
+        has_label <- all_nms != ''
+        is_animalcat <- NULL
+        ac <- NULL
+        is_storage <- NULL
+        # get all valid categories
+        valid_categories <- get_categories(token = token)
+        for (i in which(has_label)) {
+            nms <- names(all_args[[i]])
+            if ('animalcategory' %in% nms) {
+                # check for animalcategory
+                is_animalcat <- c(is_animalcat, i)
+                current_ac <- all_args[[i]][['animalcategory']]
+                # check if valid
+                if (!(current_ac %in% unlist(valid_categories))) {
+                    stop('label "', all_nms[i], '": "', current_ac, '" is not a valid animal category!\n',
+                        '  -> run get_categories() for valid animal categories')
+                }
+                # check if animals exists
+                if (!('animals' %in% nms)) {
+                    stop('label "', all_nms[i], '": "animals" (number of animals) must be supplied!')
+                }
+                # remove animalcategory entry
+                all_args[[i]][['animalcategory']] <- NULL
+                # append
+                ac <- c(ac, current_ac)
+            } else if (is.null(nms) || nms[1] == '') {
+                # check for unnamed first
+                is_animalcat <- c(is_animalcat, i)
+                current_ac <- all_args[[i]][[1]]
+                # check if valid
+                if (!(current_ac %in% unlist(valid_categories))) {
+                    stop('label "', all_nms[i], '": "', current_ac, '" is not a valid animal category!\n',
+                        '  -> run get_categories() for valid animal categories')
+                }
+                # check if animals exists
+                if (!('animals' %in% nms)) {
+                    stop('label "', all_nms[i], '": "animals" (number of animals) must be supplied!')
+                }
+                # remove animalcategory entry
+                all_args[[i]][[1]] <- NULL
+                # append
+                ac <- c(ac, current_ac)
+            } else {
+                is_storage <- c(is_storage, i)
+                # check volume and depth
+                for (what in c('volume', 'depth')) {
+                    if (!(what %in% nms)) {
+                        stop('label "', all_nms[i], '": tank "', what, '" must be supplied!')
+                    }
+                }
+            }
+        }
+        # check animal cats
+        if (is.null(ac)) stop('arguments should contain at least one animal category provided as label = list(animalcategory = ., ...)')
+        # prepare livestock
+        livestock <- as.list(all_nms[is_animalcat])
+        names(livestock) <- ac
+        # prepare storage labels
+        storage <- all_nms[is_storage]
+        # check existing parents
+        existing_parents <- lapply(names(valid_categories), 
+            function(x) any(ac %in% valid_categories[[x]]))
+        names(existing_parents) <- names(valid_categories)
+        has_pigs <- any(unlist(existing_parents[c('FatteningPigs', 'Pig')]))
+        has_cattle <- any(unlist(existing_parents[c('DairyCow', 'OtherCattle')]))
+        # check if contains_* was provided
+        for (nm in storage) {
+            if (has_cattle && !has_pigs) {
+                # only cattle
+                all_args[[nm]][['contains_cattle_manure']] <- 'yes'
+                all_args[[nm]][['contains_pig_manure']] <- 'no'
+            } else if (!has_cattle && has_pigs) {
+                # only pigs
+                all_args[[nm]][['contains_cattle_manure']] <- 'no'
+                all_args[[nm]][['contains_pig_manure']] <- 'yes'
+            } else {
+                nms <- names(all_args[[nm]])
+                # both cattle and pigs
+                for (what in c('contains_cattle_manure', 'contains_pig_manure')) {
+                    if (!(what %in% nms)) {
+                        stop('label "', all_nms[i], '": tank "', what, '" (yes/no) must be supplied!')
+                    }
+                }
+            }
+        }
+        # get variables
+        out <- get_variables(
+            categories = ac, 
+            livestock_labels = all_nms[is_animalcat],
+            storage_labels = all_nms[is_storage],
+            silent = TRUE,
+            token = token
+            )
+        # add column with animal category
+        out[, animal_category := '']
+        out[top == 'Livestock', animal_category := value[variable == 'animalcategory'], by = cat_label]
+        # fix defaults
+        out[default != '', value := default]
+        # add default arguments (storage, application, mineral)
+        frmls <- formals(deparse(sys.call()[[1]]))[2:10]
+        default_args <- lapply(frmls, eval)
+        defaults <- get_defaults()
+        # loop over defaults
+        for (def in default_args) {
+            if (length(def) != 0) {
+                for (nm in names(def)) {
+                    def_value <- def[[nm]]
+                    # check value
+                    if (def_value != 'defaults') {
+                        # set value
+                        out[variable == nm & value == '', value := def[[nm]]]
+                    } else {
+                        # get default values per category
+                        def_cat <- unlist(defaults[[nm]])
+                        # set value
+                        out[variable == nm & value == '', value := def_cat[animal_category]]
+                    }
+                }
+            }
+        }
+    } else {
+        out <- copy(data)
+        if (is.null(all_nms)) {
+            all_nms <- ''
+        }
+        if (!('cat_label' %in% names(out))) {
+            out[, cat_label := sub('.*\\[([^]]+)\\].*', '\\1', module)]
+            out[!grepl('[', module, fixed = TRUE), cat_label := '']
+        }
+    }
+    # fix supplied arguments
+    for (i in seq_along(all_args)) {
+        ac_label <- all_nms[i]
+        arg <- unlist(all_args[[i]])
+        # set values
+        out[cat_label == ac_label & variable %chin% names(arg), value := arg[variable]]
+    }
+    # return
+    if (full_output) {
+        out
+    } else {
+        out[, .(module, variable, value)]
+    }
+}
+# # create dataset
+# xx <- create_dataset(
+#     dc1 = list(animalcategory = 'dairy_cows', animals = 100),
+#     dc2 = list('dairy_cows', animals = 1),
+#     h1 = list('heifers_1st_yr', animals = 2),
+#     eq = list('ponies_and_asses', animals = 1),
+#     fp = list('fattening_pigs', animals = 50),
+#     pig = list('boars', animals = 1),
+#     sr = list('goats', animals = 5),
+#     rc = list('red_deer', animals = 10),
+#     py = list('broilers', animals = 5000),
+#     tank1 = list(volume = 30, depth = 4, contains_cattle_manure = 'yes', contains_pig_manure = 'yes')
+# )
+# # extend data set
+# yy <- create_dataset(list(compost = 5), data = xx)
+
+
+# query animal categories from Agrammon
+
+#' @export
+get_categories <- function(parents = NULL, as_list = TRUE, token = NULL) {
+    ds <- get_variables(categories = parents, token = token, silent = TRUE)
+    if (as_list) {
+        ds <- ds[variable == 'animalcategory', 
+            unlist(lapply(strsplit(remarks, split = ','), sort)),
+            by = second]
+        out <- ds[, I(setNames(vector('list', uniqueN(second)), unique(second)))]
+        for (p in names(out)) {
+            out[[p]] <- ds[second == p, V1]
+        }
+        out
+    } else {
+        ds[variable == 'animalcategory', unlist(lapply(strsplit(remarks, split = ','), sort))]
+    }
+}
+# get_categories()
+# get_categories(c('Pig', 'FatteningPigs'))
+# get_categories(c('Pig', 'FatteningPigs'), as_list = FALSE)
+
+# helper function to obtain all default values which vary
+#   between individual animal categories
+
+#' @export
+get_defaults <- function(x) {
+    all <- list(
+        # crude protein defaults
+        crude_protein = list(
+            nursing_sows = 164,
+            dry_sows = 128,
+            gilts = 151,
+            boars = 128,
+            weaned_piglets_up_to_25kg = 162
+        ),
+        energy_content = list(
+            fattening_pigs = 14,
+            nursing_sows = 13.9,
+            dry_sows = 12.1,
+            gilts = 14,
+            boars = 12.1,
+            weaned_piglets_up_to_25kg = 13.9
+            ),
+        # housing type from ProdTech 2019
+        housing_type = list(
+            dairy_cows = 'Loose_Housing_Slurry',
+            suckling_cows = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            suckling_cows_lt600 = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            suckling_cows_gt700 = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            heifers_1st_yr = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            heifers_2nd_yr = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            heifers_3rd_yr = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            fattening_calves = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            calves_suckling_cows = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            beef_cattle = 'Loose_Housing_Slurry_Plus_Solid_Manure',
+            fattening_pigs = 'Slurry_Label',
+            nursing_sows = 'Slurry_Conventional',
+            dry_sows = 'Slurry_Label',
+            gilts = 'Slurry_Label',
+            boars = 'Slurry_Label',
+            weaned_piglets_up_to_25kg = 'Slurry_Conventional',
+            growers = 'manure_belt_without_manure_belt_drying_system',
+            layers = 'manure_belt_without_manure_belt_drying_system',
+            broilers = 'deep_litter',
+            turkeys = 'deep_litter',
+            other_poultry = 'deep_litter'
+        ),
+        free_range = list(
+            growers = 'no',
+            layers = 'yes',
+            broilers = 'no',
+            turkeys = 'yes',
+            other_poultry = 'yes'
+        ),
+        drinking_system = list(
+            growers = 'drinking_nipples',
+            layers = 'drinking_nipples',
+            broilers = 'drinking_nipples',
+            turkeys = 'bell_drinkers',
+            other_poultry = 'bell_drinkers'
+        ),
+        manure_removal_interval = list(
+            layers = 'more_than_4_times_a_month',
+            growers = '3_to_4_times_a_month'
+        ),
+        # grazing days defaults from Agrammon
+        grazing_days = list(
+            dairy_cows = 180,
+            suckling_cows = 170,
+            suckling_cows_lt600 = 170,
+            suckling_cows_gt700 = 170,
+            heifers_1st_yr = 140,
+            heifers_2nd_yr = 170,
+            heifers_3rd_yr = 160,
+            fattening_calves = 0,
+            calves_suckling_cows = 170,
+            beef_cattle = 0,
+            ponies_and_asses = 220,
+            horses_older_than_3yr = 220,
+            horses_younger_than_3yr = 220,
+            milksheep = 220,
+            fattening_sheep = 220,
+            goats = 200,
+            red_deer = 365,
+            fallow_deer = 365,
+            wapiti = 365,
+            rabbit_young = 0,
+            rabbit_doe_kits = 0,
+            bison_older_than_3yr = 220,
+            bison_younger_than_3yr = 220,
+            lama_older_than_2yr = 220,
+            lama_younger_than_2yr = 220,
+            alpaca_older_than_2yr = 220,
+            alpaca_younger_than_2yr = 220
+        ),
+        # grazing hours defaults from Agrammon
+        grazing_hours = list(
+            dairy_cows = 8.5,
+            suckling_cows = 16,
+            suckling_cows_lt600 = 16,
+            suckling_cows_gt700 = 16,
+            heifers_1st_yr = 12,
+            heifers_2nd_yr = 17,
+            heifers_3rd_yr = 15,
+            fattening_calves = 0,
+            calves_suckling_cows = 16,
+            beef_cattle = 0,
+            ponies_and_asses = 8,
+            horses_older_than_3yr = 8,
+            horses_younger_than_3yr = 8,
+            milksheep = 15,
+            fattening_sheep = 15,
+            goats = 6,
+            red_deer = 24,
+            fallow_deer = 24,
+            wapiti = 24,
+            rabbit_young = 0,
+            rabbit_doe_kits = 0,
+            bison_older_than_3yr = 15,
+            bison_younger_than_3yr = 15,
+            lama_older_than_2yr = 15,
+            lama_younger_than_2yr = 15,
+            alpaca_older_than_2yr = 15,
+            alpaca_younger_than_2yr = 15
+        ),
+        # yard days default values from Agrammon
+        yard_days = list(
+            dairy_cows = c(
+                loose_housing = 270,
+                tied_housing = 100
+            ),
+            suckling_cows_gt700 = c(
+                loose_housing = 200,
+                tied_housing = 145
+            ),
+            suckling_cows = c(
+                loose_housing = 200,
+                tied_housing = 145
+            ),
+            suckling_cows_lt600 = c(
+                loose_housing = 200,
+                tied_housing = 145
+            ),
+            heifers_1st_yr = c(
+                loose_housing = 245,
+                tied_housing = 100
+            ),
+            heifers_2nd_yr = c(
+                loose_housing = 240,
+                tied_housing = 105
+            ),
+            heifers_3rd_yr = c(
+                loose_housing = 260,
+                tied_housing = 110
+            ),
+            fattening_calves = c(
+                loose_housing = 60,
+                tied_housing = 0
+            ),
+            calves_suckling_cows = c(
+                loose_housing = 200,
+                tied_housing = 0
+            ),
+            beef_cattle = c(
+                loose_housing = 160,
+                tied_housing = 80
+            ),
+            ponies_and_asses = 220,
+            horses_older_than_3yr = 250,
+            horses_younger_than_3yr = 250
+        ),
+        # yard hours default values from Agrammon
+        yard_hours = list(
+            ponies_and_asses = 12,
+            horses_older_than_3yr = 10,
+            horses_younger_than_3yr = 10
+        ),
+        # yard floor property default values from Agrammon
+        floor_properties_exercise_yard = list(
+            dairy_cows = 'solid_floor',
+            suckling_cows_gt700 = 'solid_floor',
+            suckling_cows = 'solid_floor',
+            suckling_cows_lt600 = 'solid_floor',
+            heifers_1st_yr = 'solid_floor',
+            heifers_2nd_yr = 'solid_floor',
+            heifers_3rd_yr = 'solid_floor',
+            fattening_calves = 'solid_floor',
+            calves_suckling_cows = 'solid_floor',
+            beef_cattle = 'solid_floor',
+            ponies_and_asses = 'unpaved_floor',
+            horses_older_than_3yr = 'unpaved_floor',
+            horses_younger_than_3yr = 'unpaved_floor'
+        )
+    )
+    if (missing(x)) return(all)
+    if (length(x) > 1) {
+        all[x]
+    } else {
+        all[[x]]
+    }
+}
+
+# - get template for all parents and list variables per parent
+
+#' @export
+get_variables <- function(categories = NULL, livestock_labels = NULL,
+    storage_labels = 'tank1', silent = FALSE, token = NULL) {
+    token <- agrammon:::check_token(token)
+    # get all parents
+    pcall <- capture.output(agrammon:::create_template(token = token))
+    all_parents <- trimws(grep('^\\s+[A-Z]', pcall, value = TRUE))
+    all_categories <- trimws(grep('^\\s+[a-z]', pcall, value = TRUE))
+    pos_parents <- grep('^\\s+[A-Z]', pcall)
+    pos_categories <- grep('^\\s+[a-z]', pcall)
+    # get all parents if livestock is NULL
+    if (is.null(categories)) {
+        categories <- all_parents
+    } else {
+        # check type
+        if (!length(categories) || !is.character(categories)) stop('argument categories is not valid')
+        # check entries
+        if (!all(ok <- categories %in% c(all_parents, all_categories))) {
+            stop('invalid entries: ', 
+                paste(categories[!ok], collapse = ', '),
+                '\nValid parents are:\n',
+                paste(all_parents, collapse = ', '),
+                '\nValid categories are:\n',
+                paste(all_categories, collapse = ', ')
+                )
+        }
+    }
+    # create livestock entry
+    if (is.null(livestock_labels)) {
+        livestock_labels <- categories
+        for (lbl in unique(livestock_labels)) {
+            livestock_labels[livestock_labels == lbl] <- paste0(lbl, '-', seq_len(sum(livestock_labels == lbl)))
+        }
+    } else if (length(livestock_labels) != length(categories)) {
+        stop('arguments "livestock_labels" and "categories" must have equal lengths!')
+    }
+    livestock <- vector('list', uniqueN(categories))
+    names(livestock) <- unique(categories)
+    for (ca in names(livestock)) {
+        livestock[[ca]] <- livestock_labels[categories == ca]
+    }
+    # fix numeric storage labels
+    if (is.numeric(storage_labels)) {
+        if (length(storage_labels) == 1) {
+            storage_labels <- paste0('tank-', seq.int(storage_labels))
+        } else {
+            storage_labels <- paste0('tank-', storage_labels)
+        }
+    }
+    # get template
+    temp <- agrammon:::create_template(
+        livestock = livestock,
+        storage = storage_labels,
+        token = token
+        )
+    # add module id column
+    temp[, top_sec := sub('^([^:]+::[^:]+).*', '\\1', module)]
+    # get label
+    temp[, cat_label := sub('.*\\[([^]]+)\\].*', '\\1', top_sec)]
+    temp[, has_label := grepl('[', top_sec, fixed = TRUE)]
+    temp[!(has_label), cat_label := '']
+    # remove label from top_sec
+    temp[, top_sec_no_lab := sub('\\[.*', '', top_sec)]
+    # get top module
+    temp[, top := sub(':.*', '', top_sec)]
+    # get second
+    temp[, second := sub('.*::', '', top_sec_no_lab)]
+    # loop over id column and print variables
+    if (!silent) {
+        temp[, {
+            cat(
+                '***\n',
+                .BY[[1]], '\n',
+                '  ~~ ', .BY[[2]], ':\n',
+                if ('animalcategory' %in% variable) paste0(' <ANIMAL CATEGORY LABEL: "', .BY[[3]],'">\n'),
+                if (.BY[[1]] == 'Storage' && .BY[[2]] == 'Slurry') paste0(' <TANK LABEL: "', .BY[[3]], '">\n'),
+                sep = ''
+            )
+            for (i in seq_len(.N)) {
+                cat(
+                    '     - ', variable[i], ' \n', 
+                    '         unit: "', unit[i], '"\n',
+                    if (remarks[i] != '') paste0('         accepted values: "', remarks[i], '"\n'), 
+                    if (tolower(help[i]) != gsub('_', ' ', remarks[i]) && help[i] != '') paste0('         help: "', help[i], '"\n'), 
+                    if (default[i] != '') paste0('         default: "', default[i], '"\n'),
+                    sep = ''
+                )
+            }
+        }, by = .(top, second, cat_label)]
+    }
+    # return
+    invisible(temp)
+}
+# x <- get_variables(c('DairyCow', 'dairy_cows', 'DairyCow'), storage_labels = 3)
+# y <- get_variables(c('DairyCow', 'dairy_cows'), livestock_labels = c('DC-1', 'DC2'), storage_labels = 3)
+# y <- get_variables(c('DairyCow', 'dairy_cows'), livestock_labels = c('DC-1', 'DC2'), storage_labels = 3)
+# z <- get_variables()
+
+
