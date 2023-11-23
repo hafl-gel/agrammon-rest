@@ -613,14 +613,38 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                 for (nm in names(def)) {
                     def_value <- def[[nm]]
                     # check value
-                    if (def_value != 'defaults') {
+                    if (def_value == 'defaults') {
+                        def_list <- defaults[[nm]]
+                        l <- lengths(def_list)
+                        if (any(l != 1)) {
+                            # loop over yard_days & label
+                            # ONLY occurs in livestock
+                            out[top == 'Livestock', value := {
+                                # copy value out
+                                value_out <- value
+                                # get list
+                                def_sub <- def_list[[
+                                    .BY[['animal_category']]
+                                ]]
+                                # search for housing type pattern
+                                # (so far this is ONLY split by housing type)
+                                # this might need to be adapted in later versions
+                                value_out[variable %chin% nm] <- def_sub[sapply(names(def_sub), grepl,
+                                    x = tolower(value[variable == 'housing_type']),
+                                    fixed = TRUE
+                                )]
+                                # return
+                                value_out
+                            }, by = .(cat_label, animal_category)]
+                        } else {
+                            # get default values per category
+                            def_cat <- unlist(def_list)
+                            # set value
+                            out[variable == nm & value == '', value := def_cat[animal_category]]
+                        }
+                    } else {
                         # set value
                         out[variable == nm & value == '', value := def[[nm]]]
-                    } else {
-                        # get default values per category
-                        def_cat <- unlist(defaults[[nm]])
-                        # set value
-                        out[variable == nm & value == '', value := def_cat[animal_category]]
                     }
                 }
             }
