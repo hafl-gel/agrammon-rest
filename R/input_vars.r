@@ -781,7 +781,10 @@ get_defaults <- function(x) {
         ),
         manure_removal_interval = list(
             layers = 'more_than_4_times_a_month',
-            growers = '3_to_4_times_a_month'
+            growers = '3_to_4_times_a_month',
+            broilers = 'no_manure_belt',
+            turkeys = 'no_manure_belt',
+            other_poultry = 'no_manure_belt'
         ),
         # grazing days defaults from Agrammon
         grazing_days = list(
