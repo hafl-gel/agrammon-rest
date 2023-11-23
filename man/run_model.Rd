@@ -4,9 +4,13 @@
 \alias{run_model}
 \title{title}
 \usage{
-run_model(input_file, model_options = agrammon_options(), token = NULL)
+run_model(input, model_options = agrammon_options(), token = NULL)
 }
 \arguments{
+\item{input}{either an input file name or an input data set as provided by create_dataset()}
+
+\item{model_options}{options provided to the Agrammon model which have influence on model output results or}
+
 \item{token}{Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'}
 }
 \value{

@@ -5,7 +5,7 @@
 \title{Run Agrammon}
 \usage{
 run_agrammon(
-  input_file,
+  input,
   report = getOption("agrammon.report", "full"),
   filter = getOption("agrammon.filter", "total_only"),
   language = getOption("agrammon.language", "en"),
@@ -15,7 +15,9 @@ run_agrammon(
 )
 }
 \arguments{
-\item{input_file}{path to CSV file containing model input data}
+\item{input}{either the path to a CSV file containing model input data or
+the model input data provided as a \code{data.table} as produced by 
+the function \code{\link{create_dataset}}.}
 
 \item{report}{string defining the content of the returned model result. 
 Check the table in the vignette to get more information on valid entries. 

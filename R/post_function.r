@@ -5,7 +5,9 @@
 #'
 #' run the Agrammon model via its REST interface.
 #'
-#' @param input_file path to CSV file containing model input data
+#' @param input either the path to a CSV file containing model input data or
+#'  the model input data provided as a \code{data.table} as produced by 
+#'  the function \code{\link{create_dataset}}.
 #' @param report string defining the content of the returned model result. 
 #' Check the table in the vignette to get more information on valid entries. 
 #' Partial matching of argument.
@@ -30,18 +32,18 @@
 #' # return report on NH3 losses and split up the result by all 
 #' # animal categories that exist in the input data set
 #' run_agrammon(path_example, report = 'nh3', filter = 'ex')
-run_agrammon <- function(input_file, 
+run_agrammon <- function(input, 
     report = getOption('agrammon.report', 'full'),
     filter = getOption('agrammon.filter', 'total_only'), 
     language = getOption('agrammon.language', 'en'), 
     data.table = getOption('agrammon.datatable', TRUE), 
     token = NULL, ...) {
-    # check input_file
-    if (!is.character(input_file)) {
-        stop('argument "input_file" must be of type character')
+    # check input
+    if (!is.data.frame(input) && !is.character(input)) {
+        stop('argument "input" has wrong format')
     }
-    if (!file.exists(input_file)) {
-        stop('input file does\'nt exist')
+    if (is.character(input) && !file.exists(input)) {
+        stop('input file is not accessible')
     }
     # process arguments
     dots <- list(...)
@@ -110,7 +112,7 @@ run_agrammon <- function(input_file,
         )
     )
     # run model
-    run_model(input_file, model_options, check_token(token))
+    run_model(input, model_options, check_token(token))
 }
 
 #' Set Agrammon Options
@@ -165,12 +167,14 @@ agrammon_defaults <- function(report, filter,
 #'
 #' description
 #'
+#' @param input either an input file name or an input data set as provided by create_dataset()
+#' @param model_options options provided to the Agrammon model which have influence on model output results or
 #' @param token Agrammon REST-API access token. Can be provided as option entry 'agrammon.token'
 #' @return  result from an Agrammon model run
 #' @examples
 #' run_model('./tests/inputs-version6-rest.csv')
 #' run_model('./tests/inputs-version6-rest.csv', language = 'de')
-run_model <- function(input_file, model_options = agrammon_options(), token = NULL) {
+run_model <- function(input, model_options = agrammon_options(), token = NULL) {
     # check if curl is installed
     if (!require('curl')) {
         stop('package "curl" is not available!\n\n', 
@@ -195,8 +199,11 @@ run_model <- function(input_file, model_options = agrammon_options(), token = NU
     # help user
     message('validating input file... ', appendLF = FALSE)
     # read input file
-    raw_input <- fread(file = input_file, showProgress = FALSE, header = FALSE)
-    browser()
+    if (!is.data.frame(input)) {
+        raw_input <- fread(file = input, showProgress = FALSE, header = FALSE, data.table = TRUE)
+    } else {
+        raw_input <- as.data.table(input)
+    }
     # validate input
     valid_data <- check_and_validate(raw_input, token = token)
     # help user
