@@ -609,15 +609,16 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         default_args <- lapply(frmls, eval)
         defaults <- get_defaults()
         # loop over defaults
+        all_cats <- out[top == 'Livestock', unique(animal_category)]
         for (def in default_args) {
             if (length(def) != 0) {
                 for (nm in names(def)) {
                     def_value <- def[[nm]]
                     # check value
                     if (def_value == 'defaults') {
-                        def_list <- defaults[[nm]]
+                        def_list <- defaults[[nm]][all_cats]
                         l <- lengths(def_list)
-                        if (any(l != 1)) {
+                        if (any(l > 1)) {
                             # loop over yard_days & label
                             # ONLY occurs in livestock
                             out[top == 'Livestock', value := {
@@ -630,14 +631,19 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                                 # search for housing type pattern
                                 # (so far this is ONLY split by housing type)
                                 # this might need to be adapted in later versions
-                                value_out[variable %chin% nm] <- def_sub[sapply(names(def_sub), grepl,
-                                    x = tolower(value[variable == 'housing_type']),
-                                    fixed = TRUE
-                                )]
+                                if (length(def_sub) > 1) {
+                                    value_out[variable %chin% nm] <- def_sub[sapply(names(def_sub), grepl,
+                                        x = tolower(value[variable == 'housing_type']),
+                                        fixed = TRUE
+                                    )]
+                                } else {
+                                    browser()
+                                    value_out[variable %chin% nm] <- def_sub
+                                }
                                 # return
                                 value_out
                             }, by = .(cat_label, animal_category)]
-                        } else {
+                        } else if (l != 0) {
                             # get default values per category
                             def_cat <- unlist(def_list)
                             # set value
