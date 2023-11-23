@@ -790,6 +790,7 @@ get_defaults <- function(x) {
             calves_suckling_cows = 170,
             beef_cattle = 0,
             ponies_and_asses = 220,
+            mules = 220,
             horses_older_than_3yr = 220,
             horses_younger_than_3yr = 220,
             milksheep = 220,
@@ -820,6 +821,7 @@ get_defaults <- function(x) {
             calves_suckling_cows = 16,
             beef_cattle = 0,
             ponies_and_asses = 8,
+            mules = 8,
             horses_older_than_3yr = 8,
             horses_younger_than_3yr = 8,
             milksheep = 15,
@@ -880,12 +882,14 @@ get_defaults <- function(x) {
                 tied_housing = 80
             ),
             ponies_and_asses = 220,
+            mules = 220,
             horses_older_than_3yr = 250,
             horses_younger_than_3yr = 250
         ),
         # yard hours default values from Agrammon
         yard_hours = list(
             ponies_and_asses = 12,
+            mules = 12,
             horses_older_than_3yr = 10,
             horses_younger_than_3yr = 10
         ),
@@ -902,6 +906,7 @@ get_defaults <- function(x) {
             calves_suckling_cows = 'solid_floor',
             beef_cattle = 'solid_floor',
             ponies_and_asses = 'unpaved_floor',
+            mules = 'unpaved_floor',
             horses_older_than_3yr = 'unpaved_floor',
             horses_younger_than_3yr = 'unpaved_floor'
         )
