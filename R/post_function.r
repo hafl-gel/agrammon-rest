@@ -196,14 +196,14 @@ run_model <- function(input, model_options = agrammon_options(), token = NULL) {
     hdl <- curl::new_handle()
     # set request option to post:
     curl::handle_setopt(hdl, customrequest = 'POST')
-    # help user
-    message('validating input file... ', appendLF = FALSE)
     # read input file
     if (!is.data.frame(input)) {
         raw_input <- fread(file = input, showProgress = FALSE, header = FALSE, data.table = TRUE)
     } else {
         raw_input <- as.data.table(input)
     }
+    # help user
+    message('validating input... ', appendLF = FALSE)
     # validate input
     valid_data <- check_and_validate(raw_input, token = token)
     # help user
@@ -546,6 +546,15 @@ check_token <- function(token = NULL) {
 #' @param dt a \code{data.table} of Agrammon input data
 #' @return a list with entries 'input data', 'farm_id column', 'simulation column'
 check_and_validate <- function(dt, token = NULL) {
+    # check NA in dt
+    if (dt[, anyNA(value)]) {
+        dt[, 
+            stop('input data set contains NA values!\n',
+                '  -> check variables:\n     ', 
+                paste(variable[is.na(value)], collapse = '\n     ')
+            )
+        ]
+    }
     # read input vars
     temp <- create_template(TRUE, token = token)
     # remove Note: and NA rows???
