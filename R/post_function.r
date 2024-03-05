@@ -737,10 +737,10 @@ check_and_validate <- function(dt, token = NULL) {
                 if (sum(nf) > 1) {
                     # farm id col not detectable
                     # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                    stop('farm id column is required but cannot be detected. Multiple columns contain ', uniq_num, ' unique entries.')
+                    stop('Multiple columns could serve as farm id column. Please check your input.')
                 }
             } else {
-                stop('farm id column is required but cannot be detected. No column contains exactly ', n_max, ' unique entries.')
+                stop('farm id column is required but cannot be detected. Please check your farm id column!')
             }
             # get unique cols
             if (any(nf <- nc == 1)) {
