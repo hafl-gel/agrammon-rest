@@ -546,15 +546,6 @@ check_token <- function(token = NULL) {
 #' @param dt a \code{data.table} of Agrammon input data
 #' @return a list with entries 'input data', 'farm_id column', 'simulation column'
 check_and_validate <- function(dt, token = NULL) {
-    # check NA in dt
-    if (dt[, anyNA(value)]) {
-        dt[, 
-            stop('input data set contains NA values!\n',
-                '  -> check variables:\n     ', 
-                paste(variable[is.na(value)], collapse = '\n     ')
-            )
-        ]
-    }
     # read input vars
     temp <- create_template(TRUE, token = token)
     # remove Note: and NA rows???
@@ -593,6 +584,15 @@ check_and_validate <- function(dt, token = NULL) {
     }, .SDcols = setdiff(names(dt), c(valid_module[[1]], nm_var))]
     # rename columns
     setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
+    # check NA in value
+    if (dt[, anyNA(value)]) {
+        dt[, 
+            stop('input data set contains NA values!\n',
+                '  -> check variables:\n     ', 
+                paste(variable[is.na(value)], collapse = '\n     ')
+            )
+        ]
+    }
     # get names without above columns
     nms_extra_cols <- setdiff(names(dt), c('module', 'variable', 'value'))
     # has instance?
@@ -623,12 +623,10 @@ check_and_validate <- function(dt, token = NULL) {
     unique_cols <- NULL
     # check number of entries
     list_ids <- check_no[, {
-        # get tab
-        tab <- table(num)
         # get unique entries in num
-        nms_tab <- as.integer(names(tab))
+        uniq_num <- unique(num)
         # throw error if an entry is missing
-        if (0 %in% nms_tab) {
+        if (0 %in% uniq_num) {
             ind <- 0 %in% num
             err_msg <- paste(unique(paste0('', module[ind], ' -> ', variable[ind], '\n')), collapse = '')
             # get max error message
@@ -643,9 +641,9 @@ check_and_validate <- function(dt, token = NULL) {
                 err_msg
             )
         }
-        if (length(nms_tab) > 1) {
+        if (length(uniq_num) > 1) {
             # get max
-            n_max <- nms_tab[which.max(tab)]
+            n_max <- max(uniq_num)
             # check farm id in additional columns
             if (n_max > 1) {
                 if (length(nms_extra_cols) == 0) {
@@ -653,29 +651,39 @@ check_and_validate <- function(dt, token = NULL) {
                     stop('A column containing the farm id is required\n',
                         '    if more than one farm is specified in the input!')
                 }
-                # get lengths of unique entries
-                nc <- dt[, {
-                    lapply(.SD, function(x) {
-                            lux <- length(unique(x))
-                            # check unique col entries != ''
-                            if (lux == 1 && x[1] == '') {
-                                0L
-                            } else {
-                                lux
-                            }
-                        })
-                }, .SDcols = nms_extra_cols]
-                # get fic_ (farm id col) name (error if not found)
-                if (any(nf <- nc == n_max)) {
-                    fic_ <- get(nms_extra_cols[nf])
-                    if (sum(nf) > 1) {
-                        # farm id col not detectable
-                        # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                        stop('farm id column is required but cannot be detected. Multiple columns contain ', n_max, ' unique entries.')
+                # -> check per module_var_ => no duplicated
+                tab_mod_var <- table(module_var_)
+                check_extra <- list(
+                    overall = setNames(logical(length(nms_extra_cols)), nms_extra_cols),
+                    dups = setNames(vector('list', length(nms_extra_cols)), nms_extra_cols),
+                    fic = setNames(logical(length(nms_extra_cols)), nms_extra_cols)
+                )
+                for (check_col in nms_extra_cols) {
+                    # get values
+                    check <- get(check_col)
+                    # check overall unique
+                    check_extra[['overall']][[check_col]] <- uniqueN(check) > 1 && uniqueN(check) != .N
+                    if (check_extra[['overall']][[check_col]]) {
+                        # check unique per module_var_
+                        check_extra[['dups']][[check_col]] <- sapply(names(tab_mod_var),
+                            function(x) {
+                                ind <- x == module_var_
+                                uniqueN(check[ind]) == sum(ind)
+                            })
+                        # all unique?
+                        check_extra[['fic']][[check_col]] <- all(check_extra[['dups']][[check_col]])
                     }
-                } else {
-                    stop('farm id column is required but cannot be detected. No column contains exactly ', n_max, ' unique entries.')
                 }
+                # get fic_ (farm id col) name (error if not found)
+                num_fic <- sum(check_extra[['fic']])
+                if (num_fic > 1) {
+                    # multiple possible farm ids
+                    stop('Multiple columns could serve as farm id column. Please check your input.')
+                } else if (num_fic == 0) {
+                    # no farm id column found
+                    stop('farm id column is required but cannot be detected. Please check your farm id column!')
+                }
+                fic_ <- get(nms_extra_cols[check_extra[['fic']]])
             } else {
                 # only one data set
                 fic_ <- rep('', .N)
@@ -688,13 +696,13 @@ check_and_validate <- function(dt, token = NULL) {
             on.exit(options(warning.length = warn_length))
             options(warning.length = 8170)
             # get message
-            err_msg <- missing_msg(num, n_max, module, variable, fic_, 50)
+            err_msg <- missing_msg(num, fic_, module, variable, 50)
             if (nchar(err_msg) > 8170) {
                 err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
             }
             # print error message
             stop(err_msg)
-        } else if(nms_tab != 1) {
+        } else if(uniq_num != 1) {
             # check farm id in additional columns
             if (length(nms_extra_cols) == 0) {
                 # missing farm id
@@ -714,12 +722,12 @@ check_and_validate <- function(dt, token = NULL) {
                     })
             }, .SDcols = nms_extra_cols]
             # get fic_ (farm id col) name (error if not found)
-            if (any(nf <- nc == nms_tab)) {
+            if (any(nf <- nc == uniq_num)) {
                 fic_ <- nms_extra_cols[nf]
                 if (sum(nf) > 1) {
                     # farm id col not detectable
                     # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                    stop('farm id column is required but cannot be detected. Multiple columns contain ', nms_tab, ' unique entries.')
+                    stop('farm id column is required but cannot be detected. Multiple columns contain ', uniq_num, ' unique entries.')
                 }
             } else {
                 stop('farm id column is required but cannot be detected. No column contains exactly ', n_max, ' unique entries.')
@@ -858,10 +866,9 @@ check_and_validate <- function(dt, token = NULL) {
                     # add dummy farm for missing_msg to work!
                     em <- c(em, missing_msg(
                         number = tb[i, ],
-                        farm_number = num_instances,
+                        farm_label = rep(fi, nvars),
                         module = rep(mod, nvars),
                         variable = cn,
-                        farm_label = rep(fi, nvars),
                         single_check = TRUE
                         ))
                 }
@@ -920,7 +927,9 @@ check_and_validate <- function(dt, token = NULL) {
     c(list(data = dt), list_ids)
 }
 
-missing_msg <- function(number, farm_number, module, variable, farm_label, width = 40, single_check = FALSE) {
+missing_msg <- function(number, farm_label, module, variable, width = 40, single_check = FALSE) {
+    # get farm number
+    farm_number <- uniqueN(farm_label)
     # get index
     ind <- which(number != farm_number)
     # get entries
