@@ -1,8 +1,8 @@
 Package: agrammon
 Type: Package
 Title: Run Agrammon via REST API
-Version: 1.1.6
-Date: 2023-05-17
+Version: 1.2.0
+Date: 2024-03-05
 Author: Christoph Häni
 Maintainer: Christoph Häni <christoph@bfh.ch>
 Description: This package facilitates using the Agrammon REST API from within R
@@ -13,4 +13,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

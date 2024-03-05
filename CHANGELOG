@@ -1,3 +1,8 @@
+v1.2.0
+  - Allow R object as input
+  - Add function to create data set in R
+  - Change feeding defaults (according to T.K.)
+  - Minor fixes
 v1.1.6
   - Fix removal of first row as header row when 'fread'ing input file
   - Improve error messages
