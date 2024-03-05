@@ -647,57 +647,57 @@ check_and_validate <- function(dt, token = NULL) {
                 err_msg
             )
         }
-        if (length(uniq_num) > 1) {
-            # get max
-            n_max <- max(uniq_num)
-            # check farm id in additional columns
-            if (n_max > 1) {
-                if (length(nms_extra_cols) == 0) {
-                    # missing farm id
-                    stop('A column containing the farm id is required\n',
-                        '    if more than one farm is specified in the input!')
-                }
-                # -> check per module_var_ => no duplicated
-                tab_mod_var <- table(module_var_)
-                check_extra <- list(
-                    overall = setNames(logical(length(nms_extra_cols)), nms_extra_cols),
-                    dups = setNames(vector('list', length(nms_extra_cols)), nms_extra_cols),
-                    fic = setNames(logical(length(nms_extra_cols)), nms_extra_cols)
-                )
-                for (check_col in nms_extra_cols) {
-                    # get values
-                    check <- get(check_col)
-                    # check overall unique
-                    check_extra[['overall']][[check_col]] <- uniqueN(check) > 1 && uniqueN(check) != .N
-                    if (check_extra[['overall']][[check_col]]) {
-                        # check unique per module_var_
-                        check_extra[['dups']][[check_col]] <- sapply(names(tab_mod_var),
-                            function(x) {
-                                ind <- x == module_var_
-                                uniqueN(check[ind]) == sum(ind)
-                            })
-                        # all unique?
-                        check_extra[['fic']][[check_col]] <- all(check_extra[['dups']][[check_col]])
-                    }
-                }
-                # get fic_ (farm id col) name (error if not found)
-                num_fic <- sum(check_extra[['fic']])
-                if (num_fic > 1) {
-                    # multiple possible farm ids
-                    stop('Multiple columns could serve as farm id column. Please check your input.')
-                } else if (num_fic == 0) {
-                    # no farm id column found
-                    stop('farm id column is required but cannot be detected. Please check your farm id column!')
-                }
-                fic_ <- get(nms_extra_cols[check_extra[['fic']]])
-                # check if farm id exists without mandatory input
-                fall <- dt[, unique(get(nms_extra_cols[check_extra[['fic']]]))]
-                # missing mandatory input for farm id
-                fic_ <- c(fic_, setdiff(fall, fic_))
-            } else {
-                # only one data set
-                fic_ <- rep('', .N)
+        # get max
+        n_max <- max(uniq_num)
+        # check farm id in additional columns
+        if (n_max > 1) {
+            if (length(nms_extra_cols) == 0) {
+                # missing farm id
+                stop('A column containing the farm id is required\n',
+                    '    if more than one farm is specified in the input!')
             }
+            # -> check per module_var_ => no duplicated
+            tab_mod_var <- table(module_var_)
+            check_extra <- list(
+                overall = setNames(logical(length(nms_extra_cols)), nms_extra_cols),
+                dups = setNames(vector('list', length(nms_extra_cols)), nms_extra_cols),
+                fic = setNames(logical(length(nms_extra_cols)), nms_extra_cols)
+            )
+            for (check_col in nms_extra_cols) {
+                # get values
+                check <- get(check_col)
+                # check overall unique
+                check_extra[['overall']][[check_col]] <- uniqueN(check) > 1 && uniqueN(check) != .N
+                if (check_extra[['overall']][[check_col]]) {
+                    # check unique per module_var_
+                    check_extra[['dups']][[check_col]] <- sapply(names(tab_mod_var),
+                        function(x) {
+                            ind <- x == module_var_
+                            uniqueN(check[ind]) == sum(ind)
+                        })
+                    # all unique?
+                    check_extra[['fic']][[check_col]] <- all(check_extra[['dups']][[check_col]])
+                }
+            }
+            # get fic_ (farm id col) name (error if not found)
+            num_fic <- sum(check_extra[['fic']])
+            if (num_fic > 1) {
+                # multiple possible farm ids
+                stop('Multiple columns could serve as farm id column. Please check your input.')
+            } else if (num_fic == 0) {
+                # no farm id column found
+                stop('farm id column is required but cannot be detected. Please check your farm id column!')
+            }
+            fic_ <- get(nms_extra_cols[check_extra[['fic']]])
+            # check if farm id exists without mandatory input
+            fall <- dt[, unique(get(nms_extra_cols[check_extra[['fic']]]))]
+            # missing mandatory input for farm id
+            fic_ <- c(fic_, setdiff(fall, fic_))
+        } else {
+            # only one data set
+            fic_ <- rep('', .N)
+        }
+        if (length(uniq_num) > 1 || uniqueN(fic_) != n_max) {
             # Error on new line
             cat('\n')
             # get max error message
@@ -712,40 +712,6 @@ check_and_validate <- function(dt, token = NULL) {
             }
             # print error message
             stop(err_msg)
-        } else if(uniq_num != 1) {
-            # check farm id in additional columns
-            if (length(nms_extra_cols) == 0) {
-                # missing farm id
-                stop('A column containing the farm id is required\n',
-                    '    if more than one farm is specified in the input!')
-            }
-            # get lengths of unique entries
-            nc <- dt[, {
-                lapply(.SD, function(x) {
-                        lux <- length(unique(x))
-                        # check unique col entries != ''
-                        if (lux == 1 && x[1] == '') {
-                            0L
-                        } else {
-                            lux
-                        }
-                    })
-            }, .SDcols = nms_extra_cols]
-            # get fic_ (farm id col) name (error if not found)
-            if (any(nf <- nc == uniq_num)) {
-                fic_ <- nms_extra_cols[nf]
-                if (sum(nf) > 1) {
-                    # farm id col not detectable
-                    # could be solved by checking each set according to fic_ entries, but this is too much hassle...
-                    stop('Multiple columns could serve as farm id column. Please check your input.')
-                }
-            } else {
-                stop('farm id column is required but cannot be detected. Please check your farm id column!')
-            }
-            # get unique cols
-            if (any(nf <- nc == 1)) {
-                unique_cols <- nms_extra_cols[nf]
-            }
         } else {
             # check additional columns
             if (length(nms_extra_cols) > 0) {
