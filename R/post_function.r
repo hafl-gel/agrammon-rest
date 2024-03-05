@@ -573,7 +573,13 @@ check_and_validate <- function(dt, token = NULL) {
         I(list(semicol, check_semicolon[[semicol]]))
     }]
     # remove invalid rows in module column
-    dt <- dt[which(valid_module[[2]]), ]
+    if (any(!valid_module[[2]])) {
+        cat('Removing invalid module(s):\n')
+        dt[which(!valid_module[[2]]), {
+            cat(paste(V3, collapse = ', '), '\n')
+        }]
+        dt <- dt[which(valid_module[[2]]), ]
+    }
     # find variable column
     nm_var <- dt[, {
         names(.SD)[which.max(lapply(.SD, function(x) sum(x %in% temp[, variable])))]
@@ -684,6 +690,10 @@ check_and_validate <- function(dt, token = NULL) {
                     stop('farm id column is required but cannot be detected. Please check your farm id column!')
                 }
                 fic_ <- get(nms_extra_cols[check_extra[['fic']]])
+                # check if farm id exists without mandatory input
+                fall <- dt[, unique(get(nms_extra_cols[check_extra[['fic']]]))]
+                # missing mandatory input for farm id
+                fic_ <- c(fic_, setdiff(fall, fic_))
             } else {
                 # only one data set
                 fic_ <- rep('', .N)

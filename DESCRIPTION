@@ -1,7 +1,7 @@
 Package: agrammon
 Type: Package
 Title: Run Agrammon via REST API
-Version: 1.2.0
+Version: 1.2.1
 Date: 2024-03-05
 Author: Christoph Häni
 Maintainer: Christoph Häni <christoph@bfh.ch>
