@@ -592,12 +592,14 @@ check_and_validate <- function(dt, token = NULL) {
     setnames(dt, c(valid_module[[1]], nm_var, nm_val), c('module', 'variable', 'value'))
     # check NA in value
     if (dt[, anyNA(value)]) {
-        dt[, 
+        dt[, {
+            cat('\n')
             stop('input data set contains NA values!\n',
                 '  -> check variables:\n     ', 
-                paste(variable[is.na(value)], collapse = '\n     ')
+                paste(variable[is.na(value)], collapse = '\n     '),
+                call. = FALSE
             )
-        ]
+        }]
     }
     # get names without above columns
     nms_extra_cols <- setdiff(names(dt), c('module', 'variable', 'value'))
@@ -619,8 +621,9 @@ check_and_validate <- function(dt, token = NULL) {
     # rename temp names
     setnames(temp, names(temp), paste0(names(temp), '_'))
     #########
-    # check mandatory - without instance
+    ### check mandatory - without instance
     temp_no <- temp[!(has_instance_)][default_ %chin% '', ]
+    # add row for NA indication
     check_no <- merge(temp_no, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE)[, {
         c(list(num = sum(!is.na(value))), .SD)
     }, by = module_var_]
@@ -631,73 +634,71 @@ check_and_validate <- function(dt, token = NULL) {
     list_ids <- check_no[, {
         # get unique entries in num
         uniq_num <- unique(num)
-        # throw error if an entry is missing
-        if (0 %in% uniq_num) {
-            ind <- 0 %in% num
-            err_msg <- paste(unique(paste0('', module[ind], ' -> ', variable[ind], '\n')), collapse = '')
-            # get max error message
-            warn_length <- getOption('warning.length')
-            # set max error 
-            on.exit(options(warning.length = warn_length))
-            options(warning.length = 8170)
-            if (nchar(err_msg) > 8170) {
-                err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
-            }
-            stop('Following mandatory input is missing:\n',
-                err_msg
-            )
-        }
         # get max
         n_max <- max(uniq_num)
-        # check farm id in additional columns
-        if (n_max > 1) {
-            if (length(nms_extra_cols) == 0) {
-                # missing farm id
-                stop('A column containing the farm id is required\n',
-                    '    if more than one farm is specified in the input!')
+        # -> check per module_var_ => no duplicated
+        tab_mod_var <- table(module_var_)
+        check_extra <- list(
+            overall = setNames(logical(length(nms_extra_cols)), nms_extra_cols),
+            dups = setNames(vector('list', length(nms_extra_cols)), nms_extra_cols),
+            fic = setNames(logical(length(nms_extra_cols)), nms_extra_cols)
+        )
+        for (check_col in nms_extra_cols) {
+            # get values
+            check <- get(check_col)
+            # check overall unique
+            check_extra[['overall']][[check_col]] <- uniqueN(check) >= n_max && uniqueN(check) != .N
+            if (check_extra[['overall']][[check_col]]) {
+                # check unique per module_var_
+                check_extra[['dups']][[check_col]] <- sapply(names(tab_mod_var),
+                    function(x) {
+                        ind <- x == module_var_
+                        uniqueN(check[ind]) == sum(ind)
+                    })
+                # all unique?
+                check_extra[['fic']][[check_col]] <- all(check_extra[['dups']][[check_col]])
             }
-            # -> check per module_var_ => no duplicated
-            tab_mod_var <- table(module_var_)
-            check_extra <- list(
-                overall = setNames(logical(length(nms_extra_cols)), nms_extra_cols),
-                dups = setNames(vector('list', length(nms_extra_cols)), nms_extra_cols),
-                fic = setNames(logical(length(nms_extra_cols)), nms_extra_cols)
-            )
-            for (check_col in nms_extra_cols) {
-                # get values
-                check <- get(check_col)
-                # check overall unique
-                check_extra[['overall']][[check_col]] <- uniqueN(check) > 1 && uniqueN(check) != .N
-                if (check_extra[['overall']][[check_col]]) {
-                    # check unique per module_var_
-                    check_extra[['dups']][[check_col]] <- sapply(names(tab_mod_var),
-                        function(x) {
-                            ind <- x == module_var_
-                            uniqueN(check[ind]) == sum(ind)
-                        })
-                    # all unique?
-                    check_extra[['fic']][[check_col]] <- all(check_extra[['dups']][[check_col]])
-                }
-            }
-            # get fic_ (farm id col) name (error if not found)
-            num_fic <- sum(check_extra[['fic']])
-            if (num_fic > 1) {
-                # multiple possible farm ids
-                stop('Multiple columns could serve as farm id column. Please check your input.')
-            } else if (num_fic == 0) {
-                # no farm id column found
-                stop('farm id column is required but cannot be detected. Please check your farm id column!')
-            }
-            fic_ <- get(nms_extra_cols[check_extra[['fic']]])
-            # check if farm id exists without mandatory input
-            fall <- dt[, unique(get(nms_extra_cols[check_extra[['fic']]]))]
-            # missing mandatory input for farm id
-            fic_ <- c(fic_, setdiff(fall, fic_))
-        } else {
-            # only one data set
-            fic_ <- rep('', .N)
         }
+        # get fic_ (farm id col) name (error if not found)
+        num_fic <- sum(check_extra[['fic']])
+        fic_name <- nms_extra_cols[check_extra[['fic']]]
+        if (num_fic > 1) {
+            # take second column if possible, otherwise first entry
+            pos_extra <- which(match(nms_extra_cols, names(dt)) == 2)
+            if (length(pos_extra)) {
+                fic_name <- nms_extra_cols[pos_extra]
+            } else {
+                fic_name <- nms_extra_cols[1]
+            }
+            # multiple possible farm ids
+            warning('Multiple columns could serve as farm id column. Selecting column "', fic_name, '" as farm id!\n')
+        } else if (num_fic == 0) {
+            if (n_max > 1) {
+                # check farm id in additional columns
+                if (length(nms_extra_cols) == 0) {
+                    # missing farm id
+                    cat('\n')
+                    stop('A column containing the farm id is required\n',
+                        '    if more than one farm is specified in the input!', call. = FALSE)
+                } else {
+                    # no farm id column found
+                    cat('\n')
+                    stop('farm id column is required but cannot be detected. Please check your farm id column!', call. = FALSE)
+                }
+            } else {
+                fic_name <- 'V1'
+                dt[, V1 := rep('', .N)]
+            }
+        }
+        fic_ <- mget(fic_name, ifnotfound = list(rep('', .N)))[[1]]
+        # check if farm id exists without mandatory input
+        fall <- dt[, unique(get(fic_name))]
+        # missing mandatory input for farm id
+        fic_ <- c(fic_, setdiff(fall, fic_))
+        # test missing input data
         if (length(uniq_num) > 1 || uniqueN(fic_) != n_max) {
+            # # replace NA with all
+            # fic_[is.na(fic_)] <- 'all'
             # Error on new line
             cat('\n')
             # get max error message
@@ -706,12 +707,13 @@ check_and_validate <- function(dt, token = NULL) {
             on.exit(options(warning.length = warn_length))
             options(warning.length = 8170)
             # get message
-            err_msg <- missing_msg(num, fic_, module, variable, 50)
+            err_msg <- missing_msg(num, fic_, module_, variable_, 50)
             if (nchar(err_msg) > 8170) {
                 err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
             }
             # print error message
-            stop(err_msg)
+            cat('\n')
+            stop(err_msg, call. = FALSE)
         } else {
             # check additional columns
             if (length(nms_extra_cols) > 0) {
@@ -730,7 +732,7 @@ check_and_validate <- function(dt, token = NULL) {
             }
         }
         # return
-        I(list(farm_id = fic_, unique_cols = unique_cols))
+        I(list(farm_id = fic_name, unique_cols = unique_cols))
     }]
     # get/add fic_ (to loop by)
     if (is.null(list_ids$farm_id)) {
@@ -739,7 +741,81 @@ check_and_validate <- function(dt, token = NULL) {
     } else {
         dt[, farm_id_ := frank(factor(get(list_ids$farm_id), levels = unique(get(list_ids$farm_id))), ties.method = 'dense')]
     }
-    # check mandatory - mandatory enums
+    ### any invalid entries:
+    dt[!(module_var %chin% temp[, module_var_]), {
+        if (.N > 0) {
+            wlen <- getOption('warning.length')
+            on.exit(options(warning.length = wlen))
+            options(warning.length = 8170)
+            cat('\n')
+            stop(
+                'Entries not valid!\n',
+                if (.N == 1) {
+                    'The following input entry is not valid:\n'
+                } else {
+                    'The following input entries are not valid:\n'
+                },
+                paste0('Farm ID "', get(list_ids$farm_id), '": ', module, ' -> ', variable, '\n'),
+                call. = FALSE
+            )
+        }
+    }]
+    ### check mandatory - with instance
+    temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
+    # get number per module
+    temp_ins[, num_per_module := .N, by = module_]
+    # get number of farms
+    num_farms <- dt[, uniqueN(farm_id_)]
+    # select check with instance
+    check_ins <- na.omit(merge(temp_ins, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE), cols = 'farm_id_')[, {
+        c(list(num = uniqueN(module_var_)), .SD)
+    }, by = .(farm_id_, module)]
+    # check missing/duplicated input
+    if (check_ins[, any(!has_instance)]) {
+        err_msg_dt <- check_ins[!(has_instance), {
+            farms <- paste(get(list_ids$farm_id), collapse = ', ')
+            if (nchar(farms) > 30) {
+                farms <- paste0(strtrim(farms, 30), ' ...')
+            }
+            paste0('Module "', .BY[[1]], '" variable "', .BY[[2]], '" instance name is missing! (',
+                .N, ' farms: ',
+                farms,
+                ')\n'
+            )
+        }, by = .(module_, variable_)]
+        wlen <- getOption('warning.length')
+        on.exit(options(warning.length = wlen))
+        options(warning.length = 8170)
+        err_msg <- err_msg_dt[, paste(V1, collapse = '')]
+        if (nchar(err_msg) > 8170) {
+            err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
+        }
+        # print error message
+        cat('\n')
+        stop('\n', err_msg, call. = FALSE)
+    }
+    # add module parent to check
+    check_ins[, parent := tstrsplit(module_, '[[]|[]]', keep = 1)]
+    # loop by farm id, parent
+    check_ins[, {
+        # all is.na -> not existing
+        if (!all(is_na <- is.na(instance))) {
+            if (any(is_na)) {
+                # missing entry
+                cat('\n')
+                stop('Missing entry!',
+                    if (sum(is_na) == 1) {
+                        paste0('Input ', variable_[is_na], ' is missing\n')
+                    } else {
+                        paste0('Input variables ', paste(variable_[is_na], sep = ','), ' are missing\n')
+                    },
+                    'for Instance ', instance[!is_na][1],
+                    call. = FALSE
+                )
+            }
+        }
+    }, by = .(farm_id_, parent)]
+    ### check mandatory - mandatory enums
     setnames(mand_enums, c('modvar', 'valid'))
     check_enums <- dt[module_var %chin% mand_enums[, unique(modvar)]][, {
         c(.SD, 
@@ -766,9 +842,10 @@ check_and_validate <- function(dt, token = NULL) {
         if (nchar(err_msg) > 8170) {
             err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
         }
-        stop('\n\n', err_msg)
+        cat('\n')
+        stop('\n\n', err_msg, call. = FALSE)
     }
-    # check limits 
+    ### check limits 
     validator <- temp[grepl(
         '^between|^greater( or equal)? th(a|e)n|^smaller( or equal)? th(a|e)n', 
         remarks_), {
@@ -809,103 +886,16 @@ check_and_validate <- function(dt, token = NULL) {
         if (nchar(err_msg) > 8170) {
             err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
         }
-        stop('\n\n', err_msg)
+        cat('\n')
+        stop('\n\n', err_msg, call. = FALSE)
     }
-    # check mandatory - with instance
-    temp_ins <- temp[(has_instance_)][default_ %chin% '', ]
-    # get number per module
-    temp_ins[, num_per_module := .N, by = module_]
-    # get number of farms
-    num_farms <- dt[, uniqueN(farm_id_)]
-    # select check with instance
-    check_ins <- na.omit(merge(temp_ins, dt, by.x = 'module_var_', by.y = 'module_var', all.x = TRUE), cols = 'farm_id_')[, {
-        c(list(num = uniqueN(module_var_)), .SD)
-    }, by = .(farm_id_, module)]
-    # check missing/duplicated input
-    if(check_ins[, any(num != num_per_module)]) {
-        # missing entries
-        dbg <- merge(temp_ins[, .(module_, module_var_)], 
-            check_ins[num != num_per_module], all.x = TRUE)[, fid := get(list_ids$farm_id)]
-        err_msg_dt <- dbg[, {
-            if (!all(is.na(fid))) {
-                em <- ''
-                mv <- tstrsplit(module_var_, split = ';')
-                tb <- table(fid, mv[[2]])
-                rn <- row.names(tb)
-                cn <- colnames(tb)
-                nvars <- length(cn)
-                for (i in seq_len(nrow(tb))) {
-                    fi <- rn[i]
-                    mod <- unique(module[which(fid == fi)])
-                    # get unique instances
-                    num_instances <- length(mod)
-                    # add dummy farm for missing_msg to work!
-                    em <- c(em, missing_msg(
-                        number = tb[i, ],
-                        farm_label = rep(fi, nvars),
-                        module = rep(mod, nvars),
-                        variable = cn,
-                        single_check = TRUE
-                        ))
-                }
-                em
-            } else {
-                NULL
-            }
-        }, by = .(module_)]
-        wlen <- getOption('warning.length')
-        on.exit(options(warning.length = wlen))
-        options(warning.length = 8170)
-        err_msg <- err_msg_dt[, paste(V1, collapse = '')]
-        if (nchar(err_msg) > 8170) {
-            err_msg <- paste0(strtrim(err_msg, 8170 - 60), '\n<error message truncated!>')
-        }
-        # print error message
-        stop(err_msg)
-    }
-    # add module parent to check
-    check_ins[, parent := tstrsplit(module_, '[[]|[]]', keep = 1)]
-    # loop by farm id, parent
-    check_ins[, {
-        # all is.na -> not existing
-        if (!all(is_na <- is.na(instance))) {
-            if (any(is_na)) {
-                # missing entry
-                stop('Missing entry!',
-                    if (sum(is_na) == 1) {
-                        paste0('Input ', variable_[is_na], ' is missing\n')
-                    } else {
-                        paste0('Input variables ', paste(variable_[is_na], sep = ','), ' are missing\n')
-                    },
-                    'for Instance ', instance[!is_na][1]
-                )
-            }
-        }
-    }, by = .(farm_id_, parent)]
-    # any invalid entries:
-    dt[!(module_var %chin% temp[, module_var_]), {
-        if (.N > 0) {
-            wlen <- getOption('warning.length')
-            on.exit(options(warning.length = wlen))
-            options(warning.length = 8170)
-            stop(
-                'Entries not valid!\n',
-                if (.N == 1) {
-                    'The following input entry is not valid:\n'
-                } else {
-                    'The following input entries are not valid:\n'
-                },
-                paste0('Farm ID "', get(list_ids$farm_id), '": ', module, ' -> ', variable, '\n')
-            )
-        }
-    }]
     # return
     c(list(data = dt), list_ids)
 }
 
 missing_msg <- function(number, farm_label, module, variable, width = 40, single_check = FALSE) {
     # get farm number
-    farm_number <- uniqueN(farm_label)
+    farm_number <- uniqueN(farm_label, na.rm = TRUE)
     # get index
     ind <- which(number != farm_number)
     # get entries
@@ -916,7 +906,7 @@ missing_msg <- function(number, farm_label, module, variable, width = 40, single
         tab_entries[entries] <- number[ind]
     }
     # too few/many
-    diff_entries <- tab_entries - farm_number
+    diff_entries <- tab_entries - farm_number - sum(is.na(farm_label[ind]))
     # get signs
     sig_entries <- sign(diff_entries)
     # fix out
@@ -952,8 +942,12 @@ missing_msg <- function(number, farm_label, module, variable, width = 40, single
         }
         # get missing/duplicates
         if (sig_entries[i] < 0) {
-            all_farms <- unique(farm_label)
-            print_farms <- paste(all_farms[!(all_farms %in% farms)], collapse = ', ')
+            if (anyNA(farms)) {
+                print_farms <- 'all farms'
+            } else {
+                all_farms <- unique(farm_label)
+                print_farms <- paste(all_farms[!(all_farms %in% farms)], collapse = ', ')
+            }
         } else {
             print_farms <- paste(unique(farms[duplicated(farms)]), collapse = ', ')
         }
