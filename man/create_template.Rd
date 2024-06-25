@@ -14,6 +14,9 @@ create_template(
 \arguments{
 \item{x}{model dump as json}
 }
+\value{
+a data.table containing all agrammon input variables
+}
 \description{
 helper function to create template from model dump
 }

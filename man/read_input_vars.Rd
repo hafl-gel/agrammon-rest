@@ -9,6 +9,9 @@ read_input_vars(x, language = "en", module = "")
 \arguments{
 \item{x}{model dump as json}
 }
+\value{
+fix me
+}
 \description{
 helper function to process model dump
 }

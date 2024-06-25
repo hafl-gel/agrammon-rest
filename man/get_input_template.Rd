@@ -11,6 +11,9 @@ get_input_template(
   token = NULL
 )
 }
+\value{
+an input template as a string
+}
 \description{
 helper function to get model dump via REST interface
 }

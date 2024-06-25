@@ -3,7 +3,7 @@
 #'
 #' helper function to get model dump via REST interface
 #'
-#' @return  
+#' @return  an input template as a string
 #' @examples
 #' mj <- get_input_template()
 get_input_template <- function(format = c('json', 'csv', 'text')[1], language = c('en', 'de', 'fr')[1], 
@@ -69,7 +69,7 @@ check_request <- function(req) {
 #' helper function to process model dump
 #'
 #' @param x model dump as json
-#' @return  
+#' @return fix me
 #' @examples
 #' mj <- get_input_template()
 #' x <- read_input_vars(mj)
@@ -130,7 +130,7 @@ read_input_vars <- function(x, language = 'en', module = '') {
 #' helper function to create template from model dump
 #'
 #' @param x model dump as json
-#' @return  
+#' @return a data.table containing all agrammon input variables
 #' @examples
 #'create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')))
 #'x <- create_template(livestock = list(Equides = c('a' , 'b'), ponies_and_asses = c('c', 'd')), storage = c('tank1', 'tank2'))
@@ -405,18 +405,19 @@ save_template <- function(file, livestock = list(), storage = NULL,
     invisible()
 }
 
-### add documentation below!
-
-# create new data set
-# input for livestock animal categories: animal-category-label = list(animalcategory = ., ...)
-#   -> mandatory list entries: "animals" (number of animals)
-# input for slurry storage tanks: tank-label = list(...)
-#   -> mandatory list entries: "volume", "depth" and possibly "contains_cattle_manure"/"contains_pig_manure"
-# general input is provided as list without an argument name
-# run get_variable() to get an overview on all possible list entries
-# FIXME: !!!capture supplied arguments "dairy_cows", "pigs", "livestock_general", ...!!!
-
+#' create an input data set
+#'
+#' create a valid input data set as R object (data.table)
+#'
 #' @export
+#' @details
+#' create new data set
+#' input for livestock animal categories: animal-category-label = list(animalcategory = ., ...)
+#'   -> mandatory list entries: "animals" (number of animals)
+#' input for slurry storage tanks: tank-label = list(...)
+#'   -> mandatory list entries: "volume", "depth" and possibly "contains_cattle_manure"/"contains_pig_manure"
+#' general input is provided as list without an argument name
+#' run get_variable() to get an overview on all possible list entries
 create_dataset <- function(..., full_output = FALSE, data = NULL,
     dairy_cows = list(
         amount_summer = 1.5, 
