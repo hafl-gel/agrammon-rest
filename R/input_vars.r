@@ -500,53 +500,56 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
     token = NULL
     ) {
     # bind arguments to single list
-    all_args <- list(...)
-    all_nms <- names(all_args)
+    all_dots <- list(...)
+    nms_dots <- names(all_dots)
+    # get all arguments
+    sc <- sys.call()[-1]
+    arg_list <- lapply(sc, eval)
     if (is.null(data)) {
         # check token
         token <- agrammon:::check_token(token)
-        if (is.null(all_nms)) stop('arguments must contain at least one animal category provided as label = list(animalcategory = ., ...)')
+        if (is.null(nms_dots)) stop('arguments must contain at least one animal category provided as label = list(animalcategory = ., ...)')
         # check named arguments
-        has_label <- all_nms != ''
+        has_label <- nms_dots != ''
         is_animalcat <- NULL
         ac <- NULL
         is_storage <- NULL
         # get all valid categories
         valid_categories <- get_categories(token = token)
         for (i in which(has_label)) {
-            nms <- names(all_args[[i]])
+            nms <- names(all_dots[[i]])
             if ('animalcategory' %in% nms) {
                 # check for animalcategory
                 is_animalcat <- c(is_animalcat, i)
-                current_ac <- all_args[[i]][['animalcategory']]
+                current_ac <- all_dots[[i]][['animalcategory']]
                 # check if valid
                 if (!(current_ac %in% unlist(valid_categories))) {
-                    stop('label "', all_nms[i], '": "', current_ac, '" is not a valid animal category!\n',
+                    stop('label "', nms_dots[i], '": "', current_ac, '" is not a valid animal category!\n',
                         '  -> run get_categories() for valid animal categories')
                 }
                 # check if animals exists
                 if (!('animals' %in% nms)) {
-                    stop('label "', all_nms[i], '": "animals" (number of animals) must be supplied!')
+                    stop('label "', nms_dots[i], '": "animals" (number of animals) must be supplied!')
                 }
                 # remove animalcategory entry
-                all_args[[i]][['animalcategory']] <- NULL
+                all_dots[[i]][['animalcategory']] <- NULL
                 # append
                 ac <- c(ac, current_ac)
             } else if (is.null(nms) || nms[1] == '') {
                 # check for unnamed first
                 is_animalcat <- c(is_animalcat, i)
-                current_ac <- all_args[[i]][[1]]
+                current_ac <- all_dots[[i]][[1]]
                 # check if valid
                 if (!(current_ac %in% unlist(valid_categories))) {
-                    stop('label "', all_nms[i], '": "', current_ac, '" is not a valid animal category!\n',
+                    stop('label "', nms_dots[i], '": "', current_ac, '" is not a valid animal category!\n',
                         '  -> run get_categories() for valid animal categories')
                 }
                 # check if animals exists
                 if (!('animals' %in% nms)) {
-                    stop('label "', all_nms[i], '": "animals" (number of animals) must be supplied!')
+                    stop('label "', nms_dots[i], '": "animals" (number of animals) must be supplied!')
                 }
                 # remove animalcategory entry
-                all_args[[i]][[1]] <- NULL
+                all_dots[[i]][[1]] <- NULL
                 # append
                 ac <- c(ac, current_ac)
             } else {
@@ -554,7 +557,7 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                 # check volume and depth
                 for (what in c('volume', 'depth')) {
                     if (!(what %in% nms)) {
-                        stop('label "', all_nms[i], '": tank "', what, '" must be supplied!')
+                        stop('label "', nms_dots[i], '": tank "', what, '" must be supplied!')
                     }
                 }
             }
@@ -562,10 +565,10 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         # check animal cats
         if (is.null(ac)) stop('arguments should contain at least one animal category provided as label = list(animalcategory = ., ...)')
         # prepare livestock
-        livestock <- as.list(all_nms[is_animalcat])
+        livestock <- as.list(nms_dots[is_animalcat])
         names(livestock) <- ac
         # prepare storage labels
-        storage <- all_nms[is_storage]
+        storage <- nms_dots[is_storage]
         # check existing parents
         existing_parents <- lapply(names(valid_categories), 
             function(x) any(ac %in% valid_categories[[x]]))
@@ -576,18 +579,18 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         for (nm in storage) {
             if (has_cattle && !has_pigs) {
                 # only cattle
-                all_args[[nm]][['contains_cattle_manure']] <- 'yes'
-                all_args[[nm]][['contains_pig_manure']] <- 'no'
+                all_dots[[nm]][['contains_cattle_manure']] <- 'yes'
+                all_dots[[nm]][['contains_pig_manure']] <- 'no'
             } else if (!has_cattle && has_pigs) {
                 # only pigs
-                all_args[[nm]][['contains_cattle_manure']] <- 'no'
-                all_args[[nm]][['contains_pig_manure']] <- 'yes'
+                all_dots[[nm]][['contains_cattle_manure']] <- 'no'
+                all_dots[[nm]][['contains_pig_manure']] <- 'yes'
             } else {
-                nms <- names(all_args[[nm]])
+                nms <- names(all_dots[[nm]])
                 # both cattle and pigs
                 for (what in c('contains_cattle_manure', 'contains_pig_manure')) {
                     if (!(what %in% nms)) {
-                        stop('label "', all_nms[i], '": tank "', what, '" (yes/no) must be supplied!')
+                        stop('label "', nms_dots[i], '": tank "', what, '" (yes/no) must be supplied!')
                     }
                 }
             }
@@ -595,8 +598,8 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         # get variables
         out <- get_variables(
             categories = ac, 
-            livestock_labels = all_nms[is_animalcat],
-            storage_labels = all_nms[is_storage],
+            livestock_labels = nms_dots[is_animalcat],
+            storage_labels = nms_dots[is_storage],
             silent = TRUE,
             token = token
             )
@@ -606,8 +609,18 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         # fix defaults
         out[default != '', value := default]
         # add default arguments (storage, application, mineral)
-        frmls <- formals(deparse(sys.call()[[1]]))[2:10]
+        frmls <- formals()[4:10]
         default_args <- lapply(frmls, eval)
+        # merge user provided arguments with defaults
+        merge_user <- arg_list[names(arg_list) %in% names(default_args)]
+        for (nmi in names(merge_user)) {
+            for (nmj in names(merge_user[[nmi]])) {
+                if (!(nmj %in% names(default_args[[nmi]]))) {
+                    warning('Argument "', nmi, '" entry "', nmj, '" is not valid and will be ignored')
+                }
+                default_args[[nmi]][[nmj]] <- merge_user[[nmi]][[nmj]]
+            }
+        }
         defaults <- get_defaults()
         # loop over defaults
         all_cats <- out[top == 'Livestock', unique(animal_category)]
@@ -617,13 +630,8 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                     def_value <- def[[nm]]
                     # check value
                     if (def_value == 'defaults') {
-                        # fix wrong category
-                        defs <- defaults[[nm]]
-                        def_list <- defs[names(defs) %in% all_cats]
+                        def_list <- defaults[[nm]][all_cats]
                         l <- lengths(def_list)
-                        if (length(l) == 0) {
-                            stop('note to dev: check code around line number 625!')
-                        }
                         if (any(l > 1)) {
                             # loop over yard_days & label
                             # ONLY occurs in livestock
@@ -642,14 +650,14 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                                         x = tolower(value[variable == 'housing_type']),
                                         fixed = TRUE
                                     )]
-                                } else {
-                                    browser()
+                                } else if (length(def_sub) != 0) {
+                                    stop('Note to Dev: Fixme @ ~641')
                                     value_out[variable %chin% nm] <- def_sub
                                 }
                                 # return
                                 value_out
                             }, by = .(cat_label, animal_category)]
-                        } else if (l != 0) {
+                        } else if (!all(l == 0)) {
                             # get default values per category
                             def_cat <- unlist(def_list)
                             # set value
@@ -664,8 +672,8 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         }
     } else {
         out <- copy(data)
-        if (is.null(all_nms)) {
-            all_nms <- ''
+        if (is.null(nms_dots)) {
+            nms_dots <- ''
         }
         if (!('cat_label' %in% names(out))) {
             out[, cat_label := sub('.*\\[([^]]+)\\].*', '\\1', module)]
@@ -673,12 +681,13 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         }
     }
     # fix supplied arguments
-    for (i in seq_along(all_args)) {
-        ac_label <- all_nms[i]
-        arg <- unlist(all_args[[i]])
+    for (i in seq_along(all_dots)) {
+        ac_label <- nms_dots[i]
+        arg <- unlist(all_dots[[i]])
         # set values
         out[cat_label == ac_label & variable %chin% names(arg), value := arg[variable]]
     }
+    # fix fix arguments
     # return
     if (full_output) {
         out
