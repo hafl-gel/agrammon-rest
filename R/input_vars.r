@@ -617,8 +617,13 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
                     def_value <- def[[nm]]
                     # check value
                     if (def_value == 'defaults') {
-                        def_list <- defaults[[nm]][all_cats]
+                        # fix wrong category
+                        defs <- defaults[[nm]]
+                        def_list <- defs[names(defs) %in% all_cats]
                         l <- lengths(def_list)
+                        if (length(l) == 0) {
+                            stop('note to dev: check code around line number 625!')
+                        }
                         if (any(l > 1)) {
                             # loop over yard_days & label
                             # ONLY occurs in livestock
