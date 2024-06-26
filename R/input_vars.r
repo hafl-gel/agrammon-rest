@@ -503,8 +503,25 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
     all_dots <- list(...)
     nms_dots <- names(all_dots)
     # get all arguments
-    sc <- sys.call()[-1]
-    arg_list <- lapply(sc, eval)
+    matched_call <- as.list(match.call(expand.dots = FALSE))[-(1:2)]
+    arg_list <- lapply(matched_call, eval)
+    if (length(c(all_dots, arg_list)) == 0) {
+        frmls <- formals()[4:10]
+        cat('*** Default Input Arguments ***\n')
+        for (f in names(frmls)) {
+            cat('~~~\n')
+            cat('* ', f, ':\n', sep = '')
+            fl <- eval(frmls[[f]])
+            for (a in names(fl)) {
+                if (fl[[a]] == 'defaults') {
+                    cat('   ', a, '=> *get', fl[[a]], 'from agrammon*\n')
+                } else {
+                    cat('   ', a, '=', fl[[a]], '\n')
+                }
+            }
+        }
+        return(invisible())
+    }
     if (is.null(data)) {
         # check token
         token <- agrammon:::check_token(token)
