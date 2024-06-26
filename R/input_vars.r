@@ -628,20 +628,11 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
         # add default arguments (storage, application, mineral)
         frmls <- formals()[4:10]
         default_args <- lapply(frmls, eval)
-        # merge user provided arguments with defaults
-        merge_user <- arg_list[names(arg_list) %in% names(default_args)]
-        for (nmi in names(merge_user)) {
-            for (nmj in names(merge_user[[nmi]])) {
-                if (!(nmj %in% names(default_args[[nmi]]))) {
-                    warning('Argument "', nmi, '" entry "', nmj, '" is not valid and will be ignored')
-                }
-                default_args[[nmi]][[nmj]] <- merge_user[[nmi]][[nmj]]
-            }
-        }
         defaults <- get_defaults()
-        # loop over defaults
+        # loop and set defaults
         all_cats <- out[top == 'Livestock', unique(animal_category)]
-        for (def in default_args) {
+        for (d_name in names(default_args)) {
+            def <- default_args[[d_name]]
             if (length(def) != 0) {
                 for (nm in names(def)) {
                     def_value <- def[[nm]]
@@ -688,6 +679,7 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
             }
         }
     } else {
+        stop('not finished yet')
         out <- copy(data)
         if (is.null(nms_dots)) {
             nms_dots <- ''
@@ -697,7 +689,31 @@ create_dataset <- function(..., full_output = FALSE, data = NULL,
             out[!grepl('[', module, fixed = TRUE), cat_label := '']
         }
     }
-    # fix supplied arguments
+    # get names of arguments
+    fnms <- names(formals())[c(6, 4:5, 7:10)]
+    f_ind <- order(match(names(arg_list), fnms, nomatch = 0))
+    # fix user provided arguments (except animal category and storage tank)
+    for (nm in names(arg_list)[f_ind]) {
+        # get pattern for correct modules
+        grep_module <- switch(nm
+            , livestock_general = 'Livestock'
+            , dairy_cows = 'DairyCow'
+            , pigs = 'Pig'
+            , storage_liquid = 'Storage::Slurry'
+            , storage_solid = 'Storage::SolidManure'
+            , application_liquid = 'Application::Slurry'
+            , application_solid = 'Application::SolidManure'
+            , '.'
+        )
+        # loop over argument list
+        for (var_name in names(arg_list[[nm]])) {
+            # assign value
+            out[grepl(grep_module, module) & variable == var_name, 
+                value := arg_list[[nm]][[var_name]]
+            ]
+        }
+    }
+    # fix supplied animal category and storage tank arguments
     for (i in seq_along(all_dots)) {
         ac_label <- nms_dots[i]
         arg <- unlist(all_dots[[i]])
