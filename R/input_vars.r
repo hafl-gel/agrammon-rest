@@ -1,4 +1,65 @@
 
+#' get technical config parameters
+#'
+#' function to get parameters from the technical.cfg file via REST interface
+#'
+#' @return  technical config parameters as data.table
+#' @examples
+#' # get standard technical config file
+#' tech <- get_tech_config()
+get_tech_config <- function(file = 'technical.cfg', token = NULL) {
+    # check if curl is installed
+    if (!require('curl')) {
+        stop('package "curl" is not available!\n\n', 
+            '    install.packages("curl")\n\n')
+    }
+    if (!require('jsonlite')) {
+        stop('package "jsonlite" is not available!\n\n', 
+            '    install.packages("jsonlite")\n\n')
+    }
+    # check token
+    token <- check_token(token)
+    # create handle
+    hdl <- curl::new_handle()
+    # set request option to get:
+    curl::handle_setopt(hdl, customrequest = 'GET')
+    # add header part
+    curl::handle_setheaders(hdl,
+        'Content-Type' = 'multipart/form-data',
+        'Authorization' = paste0('Bearer ', token = token),
+        'Accept' = 'application/json'
+        )
+    # url
+    url <- sprintf("%s/model/technical?technical=%s",
+        Sys.getenv('agrammon_rest_url'), file[1])
+    # send request
+    req <- curl_fetch_memory(url, handle = hdl)
+    # check return
+    char <- check_request(req)
+    # get lines
+    char_lines <- trimws(strsplit(char, split = '\n')[[1]])
+    # get sections
+    char_secs <- grep('^\\+', char_lines)
+    # get parameters
+    char_pars <- grep('^[[:alpha:]]', char_lines)
+    # get values
+    out <- data.table(
+        module = sub('^\\+', '', char_lines[char_secs[findInterval(char_pars, char_secs)]]),
+        parameter = sub('\\s.*', '', char_lines[char_pars]),
+        value = sub('\\S+\\s+=\\s+', '', char_lines[char_pars])
+    )
+    # get top module
+    out[, top_module := sub(':.*', '', module)]
+    # get sub module
+    out[, sub_module := sub('^[^:]+::', '', module)]
+    # set column order
+    setcolorder(out, c('top_module', 'sub_module', 'module', 'parameter', 'value'))
+    # add numeric values
+    suppressWarnings(out[, value_num := as.numeric(value)])
+    # return
+    out[]
+}
+
 #' get model dump
 #'
 #' helper function to get model dump via REST interface
