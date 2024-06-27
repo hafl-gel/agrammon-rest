@@ -1085,6 +1085,15 @@ agrammon_options <- function(show = FALSE, ...) {
 #' # return report on Ntot flow
 #' report(res, 'ntot')
 report <- function(x, report = 'nh3-loss') {
+    # return valid reports if no argument is provided
+    if (missing(x)) {
+        # get available reports
+        ok <- sub('.rds', '', dir(system.file('reports', package = 'agrammon')), fixed = TRUE)
+        cat('~~~ valid report filters ~~~\n')
+        cat(ok, sep = '\n')
+        cat('~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        return(invisible(ok))
+    }
     # check on data.table
     if (is_df <- !is.data.table(x)) {
         x <- as.data.table(x)
