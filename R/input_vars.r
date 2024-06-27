@@ -4,6 +4,7 @@
 #' function to get parameters from the technical.cfg file via REST interface
 #'
 #' @return  technical config parameters as data.table
+#' @export
 #' @examples
 #' # get standard technical config file
 #' tech <- get_tech_config()
