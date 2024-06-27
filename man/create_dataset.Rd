@@ -29,7 +29,7 @@ create_dataset(
     70, share_applied_direct_cattle_other_manure = 25, share_covered_basin_cattle_manure
     = 0, share_applied_direct_pig_manure = 0, share_covered_basin_pig_manure = 0),
   application_liquid = list(dilution_parts_water = 1, appl_rate = 25, fermented_slurry =
-    0, appl_summer = 53, appl_autumn_winter_spring = 47, appl_evening = 20, appl_hotdays
+    0, appl_summer = 44, appl_autumn_winter_spring = 56, appl_evening = 20, appl_hotdays
     = "sometimes", share_splash_plate = 0, share_trailing_hose = 100, share_trailing_shoe
     = 0, share_shallow_injection = 0, share_deep_injection = 0),
   application_solid = list(incorp_lw1h = 0, incorp_lw4h = 0, incorp_lw8h = 0, incorp_lw1d
