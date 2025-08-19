@@ -175,7 +175,7 @@ path_ex <- system.file('inst/extdata', 'example_data_set_3farms.csv', package = 
 # run model with 'full' report:
 res <- run_agrammon(path_ex, report = 'full')
 # extract N report
-report(res, 'N')
+report(res, 'n-balance')
 ```
 
 ## Results filtered by animal category
